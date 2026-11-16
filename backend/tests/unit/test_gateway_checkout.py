@@ -225,6 +225,22 @@ def test_gateway_outage_on_start_leaves_nothing_behind(gclient, gw_settings, fak
     assert _start(gclient, t).status_code == 201  # same key works once the gateway is back
 
 
+def test_method_not_enabled_in_stripe_gets_a_plain_message(gclient, gw_settings, fake):
+    _stock(gw_settings)
+    t = _customer(gclient)
+    _add(gclient, t)
+
+    def refuse(**_):
+        raise gw.GatewayError('No valid payment method types for this Checkout Session. Please ensure ...',
+                              status=400)
+    fake.create_checkout_session = refuse
+    r = _start(gclient, t, key='idem-gw-off-001')
+    assert r.status_code == 502
+    message = r.json()['error']['message']
+    assert message.startswith('FPX Online Banking is not available right now')
+    assert 'Checkout Session' not in message and _orders_total(gclient, t) == 0
+
+
 # --- confirming a payment ---------------------------------------------------------------------------------------
 
 def test_paid_session_becomes_an_order_with_the_gateway_reference(gclient, gw_settings, fake):

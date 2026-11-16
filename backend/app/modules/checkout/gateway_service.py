@@ -28,6 +28,7 @@ from .schemas import CheckoutIn, DeliveryIn, GatewayStartIn, validate_delivery, 
 logger = logging.getLogger('sagemaker.gateway')
 
 CHECKOUT_LIFETIME_SECONDS = 35 * 60  # Stripe requires at least 30 minutes
+_METHOD_NAMES = {'fpx': 'FPX Online Banking', 'ewallet': 'GrabPay', 'card': 'Card payment'}
 HANDLED_EVENTS = {
     'checkout.session.completed', 'checkout.session.async_payment_succeeded',
     'checkout.session.async_payment_failed', 'checkout.session.expired',
@@ -97,6 +98,11 @@ def start(conn: sqlite3.Connection, settings: Settings, gateway: Any, user_id: i
             expires_at=int(time.time()) + CHECKOUT_LIFETIME_SECONDS)
     except payments_api.GatewayError as exc:
         logger.warning('checkout session create failed for user %s: %s', user_id, exc.message)
+        if 'payment method types' in exc.message.lower():
+            # The method is not switched on in the Stripe Dashboard; tell the customer in plain words.
+            raise payments_api.GatewayUnavailable(
+                f'{_METHOD_NAMES.get(body.method, "This payment method")} is not available right now. '
+                'Please choose another payment method.') from exc
         raise payments_api.GatewayUnavailable(exc.message) from exc
 
     try:
