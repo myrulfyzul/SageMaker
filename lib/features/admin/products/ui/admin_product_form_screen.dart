@@ -227,6 +227,7 @@ class _FormState extends ConsumerState<AdminProductFormScreen> {
                             width: 72,
                             height: 72,
                             fit: BoxFit.cover,
+                            webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
                             semanticLabel: 'Product image',
                             errorBuilder: (_, __, ___) =>
                                 const Icon(Icons.broken_image)),

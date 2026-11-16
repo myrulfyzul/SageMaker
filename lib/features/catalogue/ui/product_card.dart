@@ -31,6 +31,8 @@ class ProductImageView extends StatelessWidget {
     return Image.network(
       url,
       fit: BoxFit.cover,
+      // On web, an <img> element loads images from sites without CORS headers.
+      webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
       errorBuilder: (_, __, ___) => placeholder,
       frameBuilder: (_, child, frame, sync) => sync
           ? child

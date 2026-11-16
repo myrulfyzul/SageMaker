@@ -196,6 +196,7 @@ class _ProductTile extends StatelessWidget {
             ? const Icon(Icons.image_not_supported_outlined)
             : Image.network(p.firstImage!,
                 fit: BoxFit.cover,
+                webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
                 semanticLabel: p.name,
                 errorBuilder: (_, __, ___) => const Icon(Icons.broken_image)),
       ),

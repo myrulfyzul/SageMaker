@@ -131,6 +131,8 @@ class _SiteImage extends StatelessWidget {
   Widget build(BuildContext context) => Image.network(
         url,
         fit: BoxFit.cover,
+        // On web, an <img> element loads images from sites without CORS headers.
+        webHtmlElementStrategy: WebHtmlElementStrategy.prefer,
         errorBuilder: (_, __, ___) => const DecoratedBox(
             decoration: BoxDecoration(gradient: kHeroGradient)),
         frameBuilder: (_, child, frame, sync) => sync || frame != null
