@@ -119,7 +119,8 @@ class _OrderBody extends StatelessWidget {
             .join(', ')),
         if (d.notes != null) Text('Notes: ${d.notes}'),
         const Divider(),
-        _row('Payment method', paymentMethodLabel(order.paymentMethod)),
+        _row('Payment method',
+            paymentWithProvider(order.paymentMethod, order.paymentProvider)),
         _row('Payment status', paymentStatusLabel(order.paymentStatus)),
       ],
     );

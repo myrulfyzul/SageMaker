@@ -50,7 +50,8 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     try {
       await ref
           .read(checkoutRepositoryProvider)
-          .retryPayment(widget.orderId, _channel!.method, outcome);
+          .retryPayment(widget.orderId, _channel!.method, outcome,
+              provider: _channel!.providerFor(_providerId));
       ref.invalidate(placedOrderProvider(widget.orderId));
       if (mounted) context.go('/confirmation/${widget.orderId}');
     } on ConflictFailure catch (e) {

@@ -42,6 +42,7 @@ class CheckoutIn(_Model):
     delivery: DeliveryIn
     method: Method
     outcome: Optional[SimulatedOutcome] = None
+    provider: Optional[str] = None
 
 
 def _text(value: Any) -> Optional[str]:

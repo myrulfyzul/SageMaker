@@ -1,6 +1,8 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../app/theme.dart';
+
 import '../../../../core/money.dart';
 import '../data/analytics_models.dart';
 
@@ -44,7 +46,8 @@ class ChartCard extends StatelessWidget {
               Semantics(
                 container: true,
                 label: '$title. $summary',
-                child: ExcludeSemantics(child: SizedBox(height: 220, child: chart)),
+                child: ExcludeSemantics(
+                    child: SizedBox(height: 220, child: chart)),
               ),
           ],
         ),
@@ -64,7 +67,8 @@ String shortMonth(String ym) {
   return "${names[m - 1]} '${ym.substring(2, 4)}";
 }
 
-AxisTitles _axis(String name, {Widget Function(double, TitleMeta)? labels, double size = 28}) =>
+AxisTitles _axis(String name,
+        {Widget Function(double, TitleMeta)? labels, double size = 28}) =>
     AxisTitles(
       axisNameWidget: Text(name, style: const TextStyle(fontSize: 11)),
       axisNameSize: 18,
@@ -83,7 +87,8 @@ Widget _label(TitleMeta meta, String text) => SideTitleWidget(
     );
 
 String monthlySummary(List<MonthSales> months) => months
-    .map((m) => '${shortMonth(m.month)}: ${formatRm(m.revenueSen)}, ${m.orderCount} orders')
+    .map((m) =>
+        '${shortMonth(m.month)}: ${formatRm(m.revenueSen)}, ${m.orderCount} orders')
     .join('; ');
 
 /// Revenue per month as a bar chart (x: month, y: revenue in RM).
@@ -98,7 +103,8 @@ class MonthlyRevenueChart extends StatelessWidget {
       barGroups: [
         for (var i = 0; i < months.length; i++)
           BarChartGroupData(x: i, barRods: [
-            BarChartRodData(toY: months[i].revenueSen / 100, color: color, width: 10),
+            BarChartRodData(
+                toY: months[i].revenueSen / 100, color: color, width: 10),
           ]),
       ],
       gridData: const FlGridData(drawVerticalLine: false),
@@ -113,7 +119,8 @@ class MonthlyRevenueChart extends StatelessWidget {
           if (months.length > 8 && i.isOdd) return const SizedBox.shrink();
           return _label(meta, shortMonth(months[i].month));
         }),
-        leftTitles: _axis('Revenue (RM)', size: 44, labels: (v, meta) => _label(meta, meta.formattedValue)),
+        leftTitles: _axis('Revenue (RM)',
+            size: 44, labels: (v, meta) => _label(meta, meta.formattedValue)),
       ),
     ));
   }
@@ -155,7 +162,8 @@ class LabelledBarChart extends StatelessWidget {
           final t = labels[i];
           return _label(meta, t.length > 8 ? '${t.substring(0, 7)}.' : t);
         }),
-        leftTitles: _axis(yTitle, size: 32, labels: (v, meta) => _label(meta, meta.formattedValue)),
+        leftTitles: _axis(yTitle,
+            size: 32, labels: (v, meta) => _label(meta, meta.formattedValue)),
       ),
     ));
   }
@@ -167,8 +175,8 @@ class CategoryPieChart extends StatelessWidget {
   final List<CategoryUnits> items;
 
   static const _palette = [
-    Colors.indigo, Colors.teal, Colors.orange, Colors.pink,
-    Colors.green, Colors.purple, Colors.brown, Colors.blueGrey //
+    kPrimary, kAccent, kCoral, kPrimaryLight, Color(0xFF2B3A67),
+    Color(0xFF6D2077), Color(0xFFB7791F), kSecondary //
   ];
 
   @override
@@ -195,9 +203,12 @@ class CategoryPieChart extends StatelessWidget {
         child: ListView(children: [
           for (var i = 0; i < shown.length; i++)
             Row(children: [
-              Container(width: 10, height: 10, color: _palette[i % _palette.length]),
+              Container(
+                  width: 10, height: 10, color: _palette[i % _palette.length]),
               const SizedBox(width: 6),
-              Expanded(child: Text('${shown[i].category} (${shown[i].units})', style: const TextStyle(fontSize: 12))),
+              Expanded(
+                  child: Text('${shown[i].category} (${shown[i].units})',
+                      style: const TextStyle(fontSize: 12))),
             ]),
         ]),
       ),
@@ -205,34 +216,75 @@ class CategoryPieChart extends StatelessWidget {
   }
 }
 
-/// KPI tile: label and value.
+/// KPI tile: icon, label and value. [highlight] uses the brand gradient.
 class KpiCard extends StatelessWidget {
-  const KpiCard({super.key, required this.label, required this.value});
+  const KpiCard({
+    super.key,
+    required this.label,
+    required this.value,
+    this.icon = Icons.insights_outlined,
+    this.highlight = false,
+  });
   final String label;
   final String value;
+  final IconData icon;
+  final bool highlight;
 
   @override
   Widget build(BuildContext context) {
+    final fg = highlight ? Colors.white : kText;
     return Semantics(
       container: true,
       label: '$label: $value',
       child: ExcludeSemantics(
-        child: Card(
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: Theme.of(context).textTheme.labelMedium),
-                const SizedBox(height: 4),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(value, style: Theme.of(context).textTheme.titleLarge),
-                ),
-              ],
-            ),
+        child: Container(
+          margin: const EdgeInsets.all(4),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            gradient: highlight ? kHeroGradient : null,
+            color: highlight ? null : kCard,
+            borderRadius: BorderRadius.circular(kRadiusLarge),
+            boxShadow: softShadow(highlight ? 0.2 : 0.07),
           ),
+          child: Row(children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: highlight
+                    ? Colors.white.withValues(alpha: 0.15)
+                    : const Color(0xFFE8F0EB),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child:
+                  Icon(icon, size: 20, color: highlight ? kAccent : kPrimary),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                          fontSize: 12,
+                          color: highlight ? Colors.white70 : kMuted,
+                          fontWeight: FontWeight.w600)),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(value,
+                        style: TextStyle(
+                            fontSize: 20,
+                            color: fg,
+                            fontWeight: FontWeight.w800)),
+                  ),
+                ],
+              ),
+            ),
+          ]),
         ),
       ),
     );

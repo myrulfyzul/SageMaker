@@ -47,6 +47,7 @@ def place_order(conn: sqlite3.Connection, user_id: int, body: CheckoutIn) -> tup
     key = validate_idempotency_key(body.idempotency_key)
     delivery = validate_delivery(body.delivery)
     payment_status, fulfilment, record_outcome, restore = _outcome_mapping(body)
+    payments_api.validate_provider(body.method, body.provider)
 
     with db.transaction(conn):
         existing = orders_api.find_by_idempotency_key(conn, user_id, key)
@@ -79,7 +80,9 @@ def place_order(conn: sqlite3.Connection, user_id: int, body: CheckoutIn) -> tup
         inventory_api.reserve_for_order(
             conn, [{'product_id': ln['productId'], 'variation_id': ln['variationId'], 'quantity': ln['quantity']}
                    for ln in lines], order_id, user_id)
-        payments_api.record(conn, order_id, body.method, record_outcome, order['totalSen'])
+        payments_api.record(conn, order_id, body.method, record_outcome, order['totalSen'], provider=body.provider)
+        if body.provider:
+            orders_api.update_fields(conn, order_id, payment_provider=body.provider)
         if restore:
             inventory_api.restore_for_order(conn, order_id)
         cart_api.clear(conn, user_id)

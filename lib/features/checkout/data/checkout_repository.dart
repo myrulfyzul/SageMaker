@@ -26,22 +26,25 @@ class CheckoutRepository {
     required DeliveryForm delivery,
     required String method,
     String? outcome,
+    String? provider,
   }) async {
     final body = {
       'idempotencyKey': idempotencyKey,
       'delivery': delivery.toJson(),
       'method': method,
       if (methodNeedsOutcome(method) && outcome != null) 'outcome': outcome,
+      if (provider != null) 'provider': provider,
     };
     return PlacedOrder.fromJson(Map<String, dynamic>.from(
         await _api.post('/api/checkout', body: body) as Map));
   }
 
-  Future<PlacedOrder> retryPayment(
-      String orderId, String method, String? outcome) async {
+  Future<PlacedOrder> retryPayment(String orderId, String method, String? outcome,
+      {String? provider}) async {
     final body = {
       'method': method,
       if (methodNeedsOutcome(method) && outcome != null) 'outcome': outcome,
+      if (provider != null) 'provider': provider,
     };
     return PlacedOrder.fromJson(Map<String, dynamic>.from(
         await _api.post('/api/orders/$orderId/payments', body: body) as Map));

@@ -1,0 +1,14 @@
+# Litestream streams the SQLite database to S3-compatible storage (Backblaze B2 free
+# tier) so data survives Render free-tier restarts. Values come from environment
+# variables set in the Render dashboard; see README "Keep data across restarts".
+dbs:
+  - path: ${DATABASE_PATH}
+    replicas:
+      - type: s3
+        bucket: ${LITESTREAM_BUCKET}
+        path: sagemaker
+        endpoint: ${LITESTREAM_ENDPOINT}
+        region: ${LITESTREAM_REGION}
+        access-key-id: ${LITESTREAM_ACCESS_KEY_ID}
+        secret-access-key: ${LITESTREAM_SECRET_ACCESS_KEY}
+        sync-interval: 1s

@@ -107,8 +107,7 @@ class _DetailState extends ConsumerState<_Detail> {
     try {
       await ref
           .read(staffOrderDetailProvider(widget.orderId).notifier)
-          .changeStatus(target,
-          shippingReference: shippingRef, reason: reason);
+          .changeStatus(target, shippingReference: shippingRef, reason: reason);
     } on AppFailure catch (e) {
       if (mounted) setState(() => _error = staffStatusErrorMessage(e));
     } finally {
@@ -147,7 +146,8 @@ class _DetailState extends ConsumerState<_Detail> {
         children: [
           if (widget.state.refreshFailed)
             MaterialBanner(
-              content: const Text('Refresh failed. Showing the last loaded order.'),
+              content:
+                  const Text('Refresh failed. Showing the last loaded order.'),
               actions: [
                 TextButton(
                     onPressed: widget.onRefresh, child: const Text('Retry')),
@@ -182,7 +182,8 @@ class _DetailState extends ConsumerState<_Detail> {
           Text('Shipping: ${formatRm(o.shippingFeeSen)}'),
           Text('Total: ${formatRm(o.totalSen)}',
               style: theme.textTheme.titleMedium),
-          Text('Payment: ${paymentMethodLabel(o.paymentMethod)}, '
+          Text(
+              'Payment: ${paymentWithProvider(o.paymentMethod, o.paymentProvider)}, '
               '${paymentStatusLabel(o.paymentStatus)}'),
           if (o.shippingReference != null)
             Text('Shipping reference: ${o.shippingReference}'),

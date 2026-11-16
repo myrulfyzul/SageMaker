@@ -52,6 +52,11 @@ Future<(GoRouter, ProviderContainer)> _pump(
     container: container,
     child: MaterialApp.router(theme: buildAppTheme(), routerConfig: router),
   ));
+  if (session is SessionSignedOut) {
+    // Signed-out launches open the welcome page; continue to the shop tabs.
+    await tester.pumpAndSettle();
+    router.go('/');
+  }
   return (router, container);
 }
 

@@ -130,6 +130,7 @@ class OrderDetail {
     required this.status,
     required this.paymentStatus,
     required this.paymentMethod,
+    this.paymentProvider,
     required this.lines,
     required this.subtotalSen,
     required this.shippingFeeSen,
@@ -146,6 +147,7 @@ class OrderDetail {
         status: normaliseOrderStatus((j['status'] ?? '').toString()),
         paymentStatus: (j['paymentStatus'] ?? '').toString(),
         paymentMethod: (j['paymentMethod'] ?? '').toString(),
+        paymentProvider: j['paymentProvider'] is String ? j['paymentProvider'] as String : null,
         lines: [
           for (final l in (j['lines'] as List? ?? const []))
             OrderLineItem.fromJson(Map<String, dynamic>.from(l as Map)),
@@ -170,6 +172,9 @@ class OrderDetail {
   final String status;
   final String paymentStatus;
   final String paymentMethod;
+
+  /// Bank, e-wallet or `duitnow`; null for card, COD and older orders.
+  final String? paymentProvider;
   final List<OrderLineItem> lines;
   final int subtotalSen;
   final int shippingFeeSen;
@@ -297,6 +302,25 @@ String paymentMethodLabel(String m) {
       return m.isEmpty ? 'Not set' : m.replaceAll('_', ' ');
   }
 }
+
+/// Payment method with the bank or wallet, e.g. "FPX Online Banking ? Maybank2u".
+String paymentWithProvider(String method, String? provider) {
+  final name = provider == null ? null : paymentProviderNames[provider];
+  if (provider == 'duitnow') return 'DuitNow QR';
+  return name == null ? paymentMethodLabel(method) : '${paymentMethodLabel(method)} ? $name';
+}
+
+/// Display names for provider ids stored by the API.
+const paymentProviderNames = {
+  'maybank2u': 'Maybank2u', 'cimb': 'CIMB Clicks', 'publicbank': 'Public Bank',
+  'rhb': 'RHB Now', 'hongleong': 'Hong Leong Connect', 'ambank': 'AmOnline',
+  'bankislam': 'Bank Islam', 'bsn': 'BSN', 'bankrakyat': 'Bank Rakyat',
+  'muamalat': 'Bank Muamalat', 'affin': 'Affin Bank', 'alliance': 'Alliance Bank',
+  'agrobank': 'Agrobank', 'hsbc': 'HSBC', 'ocbc': 'OCBC',
+  'sc': 'Standard Chartered', 'uob': 'UOB', 'kfh': 'KFH',
+  'tng': "Touch 'n Go eWallet", 'grabpay': 'GrabPay', 'boost': 'Boost',
+  'shopeepay': 'ShopeePay', 'mae': 'MAE by Maybank', 'duitnow': 'DuitNow QR',
+};
 
 String paymentStatusLabel(String s) {
   switch (s) {

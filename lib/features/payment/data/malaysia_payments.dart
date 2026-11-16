@@ -47,6 +47,14 @@ enum PaymentChannel {
   final IconData icon;
 
   bool get needsProvider => this == fpx || this == ewallet;
+
+  /// Provider id the API stores for this channel: the chosen bank or wallet,
+  /// `duitnow` for QR, none for card and COD.
+  String? providerFor(String? chosen) => switch (this) {
+        fpx || ewallet => chosen,
+        duitnow => duitNowProvider.id,
+        _ => null,
+      };
 }
 
 /// FPX B2C retail banks.

@@ -220,6 +220,7 @@ class CheckoutFlow extends Notifier<CheckoutState> {
             delivery: state.delivery,
             method: state.method!,
             outcome: state.outcome,
+            provider: state.channel?.providerFor(state.providerId),
           );
       ref.invalidate(checkoutCartProvider);
       state = state.copyWith(submitting: false, clearError: true);

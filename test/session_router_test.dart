@@ -207,7 +207,7 @@ void main() {
       }
       expect(resolveRedirect(const SessionSignedOut(), u('/')), isNull);
       expect(resolveRedirect(const SessionSignedOut(), u('/cart')), isNull);
-      expect(resolveRedirect(const SessionSignedOut(), u('/splash')), '/');
+      expect(resolveRedirect(const SessionSignedOut(), u('/splash')), '/welcome');
     });
 
     test('unreachable at splash goes to login', () {
@@ -254,8 +254,34 @@ void main() {
         child: MaterialApp.router(theme: buildAppTheme(), routerConfig: router),
       ));
       await tester.pumpAndSettle();
+      // Signed-out launches open the welcome page; continue to the shop tabs.
+      if (router.state.uri.path == '/welcome') {
+        router.go('/');
+        await tester.pumpAndSettle();
+      }
       return (router, container);
     }
+
+    testWidgets('signed-out launch opens the SageMaker welcome page',
+        (tester) async {
+      final container = ProviderContainer(overrides: [
+        sessionProvider.overrideWith(() => _FakeSession(const SessionSignedOut())),
+      ]);
+      addTearDown(container.dispose);
+      final router = container.read(routerProvider);
+      await tester.pumpWidget(UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp.router(theme: buildAppTheme(), routerConfig: router),
+      ));
+      await tester.pumpAndSettle();
+      expect(router.state.uri.path, '/welcome');
+      expect(find.text('Stitches of Strength, Stories of Wonder'), findsWidgets);
+      expect(find.byType(NavigationBar), findsNothing);
+      await tester.tap(find.byKey(const Key('welcome-shop')));
+      await tester.pumpAndSettle();
+      expect(router.state.uri.path, '/');
+      expect(find.byType(NavigationBar), findsOneWidget);
+    });
 
     testWidgets('customer shell has five destinations and cart badge 99+',
         (tester) async {

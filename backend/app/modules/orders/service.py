@@ -135,6 +135,7 @@ def retry_payment(conn: sqlite3.Connection, user_id: int, order_id: str, body: p
     else:
         outcome = body.outcome
         payment_status, target = _RETRY_OUTCOMES[outcome]
+    payments_api.validate_provider(body.method, body.provider)
     with db.transaction(conn):
         if orders_api.order_owner_id(conn, order_id) != user_id:
             raise NotFound()
@@ -148,8 +149,9 @@ def retry_payment(conn: sqlite3.Connection, user_id: int, order_id: str, body: p
                 conn, [{'product_id': ln['productId'], 'variation_id': ln['variationId'], 'quantity': ln['quantity']}
                        for ln in order['lines']], order_id, user_id)
             orders_api.rearm_stock_restore(conn, order_id)
-        payments_api.record(conn, order_id, body.method, outcome, order['totalSen'])
-        orders_api.update_fields(conn, order_id, payment_status=payment_status, updated_at=utc_now_iso())
+        payments_api.record(conn, order_id, body.method, outcome, order['totalSen'], provider=body.provider)
+        orders_api.update_fields(conn, order_id, payment_status=payment_status, payment_provider=body.provider,
+                                 updated_at=utc_now_iso())
         if target != 'payment_failed':
             _apply_change(conn, order, target, user_id, None)
         return customer_view(conn, orders_api.get_order(conn, order_id))

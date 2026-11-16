@@ -59,7 +59,9 @@ def _order_dict(conn: sqlite3.Connection, row: sqlite3.Row) -> dict[str, Any]:
     return {
         'id': row['id'], 'userId': row['user_id'], 'source': row['source'], 'isDemo': bool(row['is_demo']),
         'status': normalise_status(row['status']), 'paymentStatus': row['payment_status'],
-        'paymentMethod': row['payment_method'], 'customerName': row['customer_name'], 'email': row['email'],
+        'paymentMethod': row['payment_method'],
+        'paymentProvider': row['payment_provider'] if 'payment_provider' in keys else None,
+        'customerName': row['customer_name'], 'email': row['email'],
         'phone': row['phone'], 'deliveryAddress': row['delivery_address'],
         'deliveryPostcode': row['delivery_postcode'], 'deliveryState': row['delivery_state'],
         'deliveryNotes': row['delivery_notes'], 'subtotalSen': row['subtotal_sen'],

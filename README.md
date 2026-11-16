@@ -7,6 +7,48 @@ The repository has two parts:
 - `backend/`: a modular FastAPI + SQLite service (Python). Modules live in `backend/app/modules/` (auth, users, categories, products, cart, checkout, payments, orders, inventory, artisans, production, custom_orders, notifications, analytics, settings, forecasting, legacy).
 - `lib/`: a Flutter app (Riverpod, go_router) organised by feature folders in `lib/features/`. It serves customers, and sellers, admins and artisan users through role-based navigation.
 
+## 0. Quick start: run the app on your PC (no APK needed)
+
+The API is hosted at `https://sagemaker-api.onrender.com` (free tier: the first request after 15 idle minutes takes 30 to 60 seconds).
+
+**Option A: Chrome (fastest).** From the repository root:
+
+```powershell
+flutter run -d chrome --web-port=5353 --dart-define=API_BASE_URL=https://sagemaker-api.onrender.com
+```
+
+Port 5353 matters: it is the origin allowed by `ALLOWED_ORIGINS` in `render.yaml`. Press `r` for hot reload, `R` for hot restart, `q` to quit. Use Chrome DevTools (F12, device toolbar) to view it at phone size.
+
+**Option B: Android emulator (closest to a real phone).** An emulator named `Medium_Phone_API_37.0` is already set up:
+
+```powershell
+flutter emulators --launch Medium_Phone_API_37.0
+flutter run -d emulator-5554 --dart-define=API_BASE_URL=https://sagemaker-api.onrender.com
+```
+
+To work fully offline, start the local backend (section 2) and use `API_BASE_URL=http://127.0.0.1:8000` for Chrome or `http://10.0.2.2:8000` for the emulator.
+
+## 0.1 Keep data across Render restarts (Litestream + Backblaze B2, free)
+
+Render's free disk is wiped on every restart. `backend/start.sh` can restore the SQLite database from Backblaze B2 on start-up and stream every change back while the API runs. Until you set it up, the database resets to the seed data on each restart.
+
+1. Create a free account at https://www.backblaze.com/sign-up/cloud-storage (10 GB free, no card needed at the time of writing).
+2. **Buckets > Create a Bucket**: name it e.g. `sagemaker-db-<yourname>`, keep it **Private**. Note the **Endpoint** shown on the bucket (e.g. `s3.us-east-005.backblazeb2.com`); the region is the middle part (`us-east-005`).
+3. **Application Keys > Add a New Application Key**: allow access to that bucket only, Read and Write. Copy the `keyID` and `applicationKey` (shown once).
+4. In Render: **sagemaker-api > Environment**, set:
+
+   | Key | Value |
+   | --- | --- |
+   | `LITESTREAM_BUCKET` | your bucket name |
+   | `LITESTREAM_ENDPOINT` | the endpoint, e.g. `s3.us-east-005.backblazeb2.com` |
+   | `LITESTREAM_REGION` | e.g. `us-east-005` |
+   | `LITESTREAM_ACCESS_KEY_ID` | the `keyID` |
+   | `LITESTREAM_SECRET_ACCESS_KEY` | the `applicationKey` |
+
+5. Save; Render redeploys. The log should show `Restoring database from replica` and then Litestream replicating. Create an account in the app, restart the service (**Manual Deploy > Restart**), and sign in again to confirm the data survived.
+
+Uploaded product images (`MEDIA_DIR`) are not replicated and still reset on restart; product images that point to web URLs are unaffected.
+
 ## 1. Setup on Windows with VS Code (follow in order)
 
 Run every command from the repository root (`D:\Documents\SAGEMAKER\sagemaker-flutter`) in a VS Code PowerShell terminal.

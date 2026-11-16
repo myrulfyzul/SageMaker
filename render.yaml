@@ -3,13 +3,13 @@ services:
     name: sagemaker-api
     runtime: python
     plan: free
-    buildCommand: pip install -r backend/requirements.txt
-    # The free disk is temporary, so the database is rebuilt on each start:
-    # migrate, seed (exit code 2 = already seeded, which is fine), then serve.
-    startCommand: >-
-      python -m backend.migrate up &&
-      (python -m backend.seed || true) &&
-      python -m uvicorn app.main:application --app-dir backend --host 0.0.0.0 --port $PORT
+    # Litestream (backend/litestream.yml) keeps the SQLite database in Backblaze B2.
+    buildCommand: >-
+      pip install -r backend/requirements.txt &&
+      mkdir -p bin &&
+      curl -sSL https://github.com/benbjohnson/litestream/releases/download/v0.3.13/litestream-v0.3.13-linux-amd64.tar.gz
+      | tar -xz -C bin
+    startCommand: bash backend/start.sh
     healthCheckPath: /api/health
     envVars:
       - key: PYTHON_VERSION
@@ -20,3 +20,18 @@ services:
         value: /tmp/media
       - key: DEMO_MODE
         value: "1"
+      # Lets the app run in Chrome on your PC (flutter run -d chrome --web-port=5353).
+      - key: ALLOWED_ORIGINS
+        value: http://localhost:5353,http://127.0.0.1:5353
+      # Fill these in on the Render dashboard (Environment tab). Leave
+      # LITESTREAM_BUCKET empty to run without persistence.
+      - key: LITESTREAM_BUCKET
+        sync: false
+      - key: LITESTREAM_ENDPOINT
+        sync: false
+      - key: LITESTREAM_REGION
+        sync: false
+      - key: LITESTREAM_ACCESS_KEY_ID
+        sync: false
+      - key: LITESTREAM_SECRET_ACCESS_KEY
+        sync: false

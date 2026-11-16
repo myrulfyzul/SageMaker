@@ -27,7 +27,7 @@ const _guardedPrefixes = [
 ];
 
 /// Open to every session, whatever the role.
-const _sharedPaths = {'/about', '/settings/connection'};
+const _sharedPaths = {'/welcome', '/about', '/settings/connection'};
 
 bool _isGuarded(String path) =>
     _guardedPrefixes.any((p) => path == p || path.startsWith('$p/'));
@@ -61,8 +61,9 @@ String? resolveRedirect(SessionState session, Uri uri) {
       return path == _splash ? null : _splash;
 
     case SessionSignedOut() || SessionServerUnreachable():
+      // Signed-out launches open the SageMaker landing page first.
       if (path == _splash) {
-        return session is SessionServerUnreachable ? '/login' : '/';
+        return session is SessionServerUnreachable ? '/login' : '/welcome';
       }
       if (_isGuarded(path)) {
         return Uri(path: '/login', queryParameters: {'from': uri.toString()})

@@ -22,6 +22,7 @@ import '../features/favourites/ui/favourites_screen.dart';
 import '../features/payment/ui/confirmation_screen.dart';
 import '../features/payment/ui/payment_screen.dart';
 import '../features/home/ui/home_screen.dart';
+import '../features/welcome/ui/welcome_screen.dart';
 import '../features/orders/ui/my_orders_screen.dart';
 import '../features/orders/ui/order_tracking_screen.dart';
 import '../features/admin/orders/ui/staff_order_detail_screen.dart';
@@ -85,6 +86,7 @@ List<RouteBase> customerRoutes() => [
 
 /// Screens open to everyone, signed in or not.
 List<RouteBase> publicRoutes() => [
+      _page('/welcome', (_) => const WelcomeScreen()),
       _page('/about', (_) => const AboutScreen()),
       _page('/settings/connection', (_) => const ConnectionSettingsScreen()),
       _page('/register', (_) => const RegisterScreen()),

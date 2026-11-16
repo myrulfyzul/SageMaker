@@ -1,6 +1,7 @@
 """SQLite access: connection factory and write transactions."""
 from __future__ import annotations
 
+import os
 import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
@@ -17,6 +18,9 @@ def connect(path: Union[str, Path], *, check_same_thread: bool = True) -> sqlite
     conn = sqlite3.connect(str(path), isolation_level=None, timeout=BUSY_TIMEOUT_MS / 1000,
                            check_same_thread=check_same_thread)
     conn.row_factory = sqlite3.Row
+    if os.environ.get('SQLITE_WAL') == '1' and str(path) != ':memory:':
+        # Litestream replication (backend/start.sh) needs WAL; the mode is stored in the file.
+        conn.execute('PRAGMA journal_mode = WAL')
     conn.execute('PRAGMA foreign_keys = ON')
     conn.execute(f'PRAGMA busy_timeout = {BUSY_TIMEOUT_MS}')
     return conn

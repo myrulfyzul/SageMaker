@@ -43,6 +43,7 @@ class ProfileScreen extends ConsumerWidget {
               subtitle: const Text('Sign in to see your profile and orders'),
               onTap: () => context.push('/login'),
             ),
+          _link(context, Icons.play_circle_outline, 'Discover SageMaker', '/welcome'),
           _link(context, Icons.info_outline, 'About', '/about'),
           _link(context, Icons.settings_ethernet, 'Connection settings',
               '/settings/connection'),

@@ -38,9 +38,7 @@ class DashboardScreen extends ConsumerWidget {
                     onPressed: notifier.retry, child: const Text('Retry')),
               ],
             ),
-          if (d.hasData)
-            const SizedBox.shrink(),
-
+          const _Greeting(),
           _KpiGrid(kpis: d.kpis),
           ChartCard(
             title: 'Sales by month',
@@ -94,21 +92,50 @@ class _KpiGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
-      ('Revenue', formatRm(kpis.totalRevenueSen)),
-      ('Orders', '${kpis.orderCount}'),
-      ('Pending', '${kpis.pendingOrders}'),
-      ('AOV', formatRm(kpis.aovSen)),
-      ('Low stock', '${kpis.lowStockCount}'),
-      ('Open production', '${kpis.openProductionJobs}'),
-      ('Shipped', '${kpis.shippedOrderCount}'),
+      ('Revenue', formatRm(kpis.totalRevenueSen), Icons.payments_outlined),
+      ('Orders', '${kpis.orderCount}', Icons.receipt_long_outlined),
+      ('Pending', '${kpis.pendingOrders}', Icons.pending_actions_outlined),
+      ('AOV', formatRm(kpis.aovSen), Icons.shopping_basket_outlined),
+      ('Low stock', '${kpis.lowStockCount}', Icons.warning_amber_rounded),
+      (
+        'Open production',
+        '${kpis.openProductionJobs}',
+        Icons.handyman_outlined
+      ),
+      ('Shipped', '${kpis.shippedOrderCount}', Icons.local_shipping_outlined),
     ];
     return GridView(
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2, mainAxisExtent: 84),
+          crossAxisCount: 2, mainAxisExtent: 76),
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.all(8),
-      children: [for (final i in items) KpiCard(label: i.$1, value: i.$2)],
+      children: [
+        for (final (n, i) in items.indexed)
+          KpiCard(label: i.$1, value: i.$2, icon: i.$3, highlight: n == 0),
+      ],
+    );
+  }
+}
+
+class _Greeting extends StatelessWidget {
+  const _Greeting();
+
+  @override
+  Widget build(BuildContext context) {
+    final hour = DateTime.now().hour;
+    final hello = hour < 12
+        ? 'Selamat pagi'
+        : hour < 19
+            ? 'Selamat petang'
+            : 'Selamat malam';
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(hello, style: Theme.of(context).textTheme.bodySmall),
+        Text("Here's how the store is doing",
+            style: Theme.of(context).textTheme.headlineSmall),
+      ]),
     );
   }
 }

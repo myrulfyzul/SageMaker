@@ -99,7 +99,7 @@ def product_sale_lines(conn: sqlite3.Connection, product_id: str) -> list[sqlite
         (product_id,)).fetchall()
 
 
-_UPDATABLE = ('status', 'payment_status', 'shipping_reference', 'cancel_reason', 'updated_at')
+_UPDATABLE = ('status', 'payment_status', 'payment_provider', 'shipping_reference', 'cancel_reason', 'updated_at')
 
 
 def update_order_fields(conn: sqlite3.Connection, order_id: str, **fields: Any) -> None:
