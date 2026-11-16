@@ -89,9 +89,9 @@ def create_app(settings: Settings) -> NoSniffASGI:
         yield
 
     app = FastAPI(
-        title='Sagemaker-inspired Prototype API',
-        version='1.0-demo',
-        description='Independent university prototype. Not an official Sagemaker product; all payments are simulated.',
+        title='SageMaker API',
+        version='1.0',
+        description='SageMaker Asia commerce and operations API. Payments run through a prototype gateway.',
         docs_url='/docs',
         openapi_url='/openapi.json',
         lifespan=lifespan,

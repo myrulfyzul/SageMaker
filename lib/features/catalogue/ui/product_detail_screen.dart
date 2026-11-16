@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/money.dart';
 import '../../../core/widgets/async_value_view.dart';
-import '../../../core/widgets/demo_label.dart';
 import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/loading_view.dart';
 import '../../favourites/ui/favourites_screen.dart';
@@ -103,7 +102,6 @@ class _ProductDetailBodyState extends ConsumerState<ProductDetailBody> {
         crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           Text(formatRm(price), style: theme.textTheme.titleLarge),
-          if (p.isDemo) const DemoLabel.item(),
         ],
       ),
       const SizedBox(height: 8),

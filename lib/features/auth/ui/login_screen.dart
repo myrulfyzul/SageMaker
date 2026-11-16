@@ -6,10 +6,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/navigation_memory.dart';
 import '../../../core/network/app_failure.dart';
-import '../../../core/widgets/demo_label.dart';
+import '../../../app/theme.dart';
+import '../../../core/widgets/ui_kit.dart';
 import '../state/auth_actions.dart';
 import '../state/session_provider.dart';
-import 'fictional_data_notice.dart';
 
 // Tooltips for the visibility toggle.
 const _revealTip = 'Show password';
@@ -98,97 +98,172 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final session = ref.watch(sessionProvider);
-    final scheme = Theme.of(context).colorScheme;
     final locked = _lockSeconds > 0;
     final error = locked
         ? 'Too many failed attempts. Try again in $_lockSeconds seconds.'
         : _error;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Sign in'),
-        leading: IconButton(
-          tooltip: 'Cancel',
-          icon: const Icon(Icons.close),
-          onPressed: () => cancelLogin(
-              GoRouter.of(context), ref.read(navigationMemoryProvider)),
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Form(
-            key: _form,
+      body: Stack(children: [
+        const _BrandBackdrop(),
+        SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Align(
-                    alignment: Alignment.centerLeft,
-                    child: DemoLabel.prototype()),
-                const SizedBox(height: 12),
-                if (session is SessionServerUnreachable) ...[
-                  Text(session.message,
-                      style: TextStyle(color: scheme.error),
-                      key: const Key('unreachable-error')),
-                  const SizedBox(height: 12),
-                ],
-                TextFormField(
-                  controller: _email,
-                  keyboardType: TextInputType.emailAddress,
-                  autofillHints: const [AutofillHints.email],
-                  textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(labelText: 'Email'),
-                  validator: (v) => (v == null || v.trim().isEmpty)
-                      ? 'Enter your email'
-                      : null,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _password,
-                  obscureText: _obscure,
-                  autofillHints: const [AutofillHints.password],
-                  onFieldSubmitted: (_) => _submit(),
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    suffixIcon: IconButton(
-                      tooltip: _obscure ? _revealTip : _concealTip,
-                      icon: Icon(
-                          _obscure ? Icons.visibility : Icons.visibility_off),
-                      onPressed: () => setState(() => _obscure = !_obscure),
-                    ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    tooltip: 'Cancel',
+                    color: Colors.white,
+                    icon: const Icon(Icons.close),
+                    onPressed: () => cancelLogin(GoRouter.of(context),
+                        ref.read(navigationMemoryProvider)),
                   ),
-                  validator: (v) =>
-                      (v == null || v.isEmpty) ? 'Enter your password' : null,
-                ),
-                if (error != null) ...[
-                  const SizedBox(height: 12),
-                  Semantics(
-                    liveRegion: true,
-                    child: Text(error,
-                        key: const Key('login-error'),
-                        style: TextStyle(color: scheme.error)),
-                  ),
-                ],
-                const SizedBox(height: 16),
-                FilledButton(
-                  onPressed: (_busy || locked) ? null : _submit,
-                  child: _busy
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Text('Sign in'),
-                ),
-                TextButton(
-                  onPressed: () => context.push('/register'),
-                  child: const Text('Create an account'),
                 ),
                 const SizedBox(height: 8),
-                const FictionalDataNotice(),
+                const FadeSlideIn(child: _BrandTitle()),
+                const SizedBox(height: 28),
+                FadeSlideIn(
+                  index: 2,
+                  child: SoftCard(
+                    padding: const EdgeInsets.all(22),
+                    child: Form(
+                      key: _form,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text('Sign in',
+                              style: Theme.of(context).textTheme.headlineMedium),
+                          const SizedBox(height: 4),
+                          Text('Welcome back. Sign in to shop and track your orders.',
+                              style: Theme.of(context).textTheme.bodySmall),
+                          const SizedBox(height: 18),
+                          if (session is SessionServerUnreachable) ...[
+                            Text(session.message,
+                                style: const TextStyle(color: kError),
+                                key: const Key('unreachable-error')),
+                            const SizedBox(height: 12),
+                          ],
+                          TextFormField(
+                            controller: _email,
+                            keyboardType: TextInputType.emailAddress,
+                            autofillHints: const [AutofillHints.email],
+                            textInputAction: TextInputAction.next,
+                            decoration: const InputDecoration(
+                                labelText: 'Email',
+                                prefixIcon: Icon(Icons.mail_outline)),
+                            validator: (v) => (v == null || v.trim().isEmpty)
+                                ? 'Enter your email'
+                                : null,
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _password,
+                            obscureText: _obscure,
+                            autofillHints: const [AutofillHints.password],
+                            onFieldSubmitted: (_) => _submit(),
+                            decoration: InputDecoration(
+                              labelText: 'Password',
+                              prefixIcon: const Icon(Icons.lock_outline),
+                              suffixIcon: IconButton(
+                                tooltip: _obscure ? _revealTip : _concealTip,
+                                icon: Icon(_obscure
+                                    ? Icons.visibility
+                                    : Icons.visibility_off),
+                                onPressed: () =>
+                                    setState(() => _obscure = !_obscure),
+                              ),
+                            ),
+                            validator: (v) => (v == null || v.isEmpty)
+                                ? 'Enter your password'
+                                : null,
+                          ),
+                          if (error != null) ...[
+                            const SizedBox(height: 12),
+                            Semantics(
+                              liveRegion: true,
+                              child: Text(error,
+                                  key: const Key('login-error'),
+                                  style: const TextStyle(color: kError)),
+                            ),
+                          ],
+                          const SizedBox(height: 18),
+                          FilledButton(
+                            onPressed: (_busy || locked) ? null : _submit,
+                            child: _busy
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2, color: Colors.white))
+                                : const Text('Sign in'),
+                          ),
+                          const SizedBox(height: 6),
+                          TextButton(
+                            onPressed: () => context.push('/register'),
+                            child: const Text('Create an account'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
         ),
-      ),
+      ]),
     );
   }
+}
+
+/// Emerald gradient over the top of the screen with soft circles.
+class _BrandBackdrop extends StatelessWidget {
+  const _BrandBackdrop();
+
+  @override
+  Widget build(BuildContext context) => const Positioned(
+        left: 0,
+        right: 0,
+        top: 0,
+        height: 340,
+        child: GradientPanel(radius: 0, child: SizedBox.expand()),
+      );
+}
+
+class _BrandTitle extends StatelessWidget {
+  const _BrandTitle();
+
+  @override
+  Widget build(BuildContext context) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              gradient: kGoldGradient,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            alignment: Alignment.center,
+            child: const Text('S',
+                style: TextStyle(
+                    fontFamily: kDisplayFont,
+                    color: kPrimary,
+                    fontSize: 32,
+                    fontWeight: FontWeight.w700)),
+          ),
+          const SizedBox(height: 16),
+          const Text('SageMaker',
+              style: TextStyle(
+                  fontFamily: kDisplayFont,
+                  color: Colors.white,
+                  fontSize: 34,
+                  fontWeight: FontWeight.w700)),
+          const SizedBox(height: 4),
+          const Text('Handmade with heart by women artisans.',
+              style: TextStyle(color: Colors.white70, fontSize: 14)),
+        ],
+      );
 }

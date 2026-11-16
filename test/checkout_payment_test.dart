@@ -13,7 +13,9 @@ import 'package:sagemaker_flutter/features/checkout/data/checkout_models.dart';
 import 'package:sagemaker_flutter/features/checkout/state/checkout_flow.dart';
 import 'package:sagemaker_flutter/features/checkout/ui/checkout_screen.dart';
 import 'package:sagemaker_flutter/features/payment/ui/confirmation_screen.dart';
+import 'package:sagemaker_flutter/features/payment/data/malaysia_payments.dart';
 import 'package:sagemaker_flutter/features/payment/ui/payment_chooser.dart';
+import 'package:sagemaker_flutter/features/payment/ui/payment_gateway_screen.dart';
 
 class _FakeSession extends SessionNotifier {
   @override
@@ -236,31 +238,109 @@ void main() {
       await tester.tap(find.byKey(const Key('stepNext')));
       await tester.pumpAndSettle();
       expect(find.text('Step 3 of 4: Payment method'), findsOneWidget);
-      expect(find.text('Demo only: payments are simulated.'), findsOneWidget);
+      expect(find.text('How would you like to pay?'), findsOneWidget);
     });
 
-    testWidgets('card shows a demo field; cod hides outcomes', (tester) async {
-      String? method = 'card';
+    testWidgets('FPX shows the bank list; picking a bank reports it',
+        (tester) async {
+      PaymentChannel? channel;
+      String? provider;
       await tester.pumpWidget(MaterialApp(
+        theme: buildAppTheme(),
         home: StatefulBuilder(
           builder: (context, set) => Scaffold(
-            body: PaymentChooser(
-              method: method,
-              outcome: null,
-              onMethod: (m) => set(() => method = m),
-              onOutcome: (_) {},
+            body: SingleChildScrollView(
+              child: PaymentChooser(
+                channel: channel,
+                providerId: provider,
+                onChanged: (c, p) => set(() {
+                  channel = c;
+                  provider = p;
+                }),
+              ),
             ),
           ),
         ),
       ));
-      expect(find.byKey(const Key('demoCardField')), findsOneWidget);
-      expect(find.text('Simulated outcome (demo)'), findsOneWidget);
-      await tester.tap(find.text('Cash on delivery'));
-      await tester.pump();
-      expect(find.byKey(const Key('demoCardField')), findsNothing);
-      expect(find.text('Simulated outcome (demo)'), findsNothing);
+      expect(find.byKey(const Key('provider-maybank2u')), findsNothing);
+      await tester.tap(find.byKey(const Key('channel-fpx')));
+      await tester.pumpAndSettle();
+      expect(channel, PaymentChannel.fpx);
+      expect(find.byKey(const Key('provider-maybank2u')), findsOneWidget);
+      await tester.ensureVisible(find.byKey(const Key('provider-maybank2u')));
+      await tester.tap(find.byKey(const Key('provider-maybank2u')));
+      await tester.pumpAndSettle();
+      expect(provider, 'maybank2u');
+      await tester.ensureVisible(find.byKey(const Key('channel-cod')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('channel-cod')));
+      await tester.pumpAndSettle();
+      expect(channel, PaymentChannel.cod);
+      expect(provider, isNull);
+      expect(find.byKey(const Key('provider-maybank2u')), findsNothing);
     });
 
+    test('FPX needs a bank before review; COD does not', () {
+      final (c, _) = _container((r) async => _json(200, {}));
+      final n = c.read(checkoutFlowProvider.notifier);
+      n.chooseChannel(PaymentChannel.fpx);
+      expect(n.continueFromPayment(), isFalse);
+      expect(c.read(checkoutFlowProvider).error, 'Choose your bank.');
+      n.chooseChannel(PaymentChannel.fpx, providerId: 'cimb');
+      expect(n.continueFromPayment(), isTrue);
+      n.chooseChannel(PaymentChannel.cod);
+      expect(c.read(checkoutFlowProvider).providerId, isNull);
+      expect(c.read(checkoutFlowProvider).paymentChosen, isTrue);
+    });
+
+    test('card number and expiry checks', () {
+      expect(luhnValid('4111111111111111'), isTrue);
+      expect(luhnValid('4111111111111112'), isFalse);
+      expect(cardBrand('4111'), 'VISA');
+      expect(cardBrand('5500'), 'Mastercard');
+      final now = DateTime(2026, 11, 1);
+      expect(expiryValid('11/26', now), isTrue);
+      expect(expiryValid('10/26', now), isFalse);
+      expect(expiryValid('13/30', now), isFalse);
+    });
+
+    testWidgets('e-wallet PIN 000000 is declined by the gateway',
+        (tester) async {
+      String? result;
+      await tester.pumpWidget(MaterialApp(
+        theme: buildAppTheme(),
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: Center(
+              child: TextButton(
+                onPressed: () async => result = await openPaymentGateway(
+                    context,
+                    channel: PaymentChannel.ewallet,
+                    providerId: 'tng',
+                    amountSen: 4600),
+                child: const Text('open'),
+              ),
+            ),
+          ),
+        ),
+      ));
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byKey(const Key('pin-0')));
+      await tester.pumpAndSettle();
+      for (var i = 0; i < 6; i++) {
+        await tester.tap(find.byKey(const Key('pin-0')));
+        await tester.pump();
+      }
+      // PIN complete -> _finish: 250 ms, then 1400 ms processing.
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(const Duration(milliseconds: 1500));
+      expect(find.text('Payment declined'), findsOneWidget);
+      // 1100 ms result hold, then the route pops with the outcome.
+      await tester.pump(const Duration(milliseconds: 1200));
+      await tester.pumpAndSettle();
+      expect(result, 'failed');
+    });
     Future<void> pumpConfirmation(
         WidgetTester tester, String payment, String status) async {
       final (c, _) =
@@ -270,10 +350,10 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('confirmation (paid): demo label, no retry', (tester) async {
+    testWidgets('confirmation (paid): track order, no retry', (tester) async {
       await pumpConfirmation(tester, 'paid', 'placed');
       expect(find.text('Payment successful'), findsOneWidget);
-      expect(find.text('Demo only: payments are simulated.'), findsOneWidget);
+      expect(find.text('Track order'), findsOneWidget);
       expect(find.text('Retry payment'), findsNothing);
       expect(find.text('Return to shop'), findsOneWidget);
     });

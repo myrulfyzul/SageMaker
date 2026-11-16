@@ -99,7 +99,7 @@ class MyOrdersScreen extends ConsumerWidget {
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
-                        'Demo orders placed as a guest on this device before accounts existed.'),
+                        'Orders placed as a guest on this device before you signed in.'),
                   ),
                   for (final saved in legacy) _LegacyTile(saved: saved),
                 ],

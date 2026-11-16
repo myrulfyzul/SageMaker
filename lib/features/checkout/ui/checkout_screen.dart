@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/theme.dart';
 import '../../../core/constants.dart';
 import '../../../core/money.dart';
-import '../../../core/widgets/demo_label.dart';
 import '../../../core/widgets/empty_view.dart';
 import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/loading_view.dart';
+import '../../../core/widgets/ui_kit.dart';
+import '../../payment/data/malaysia_payments.dart';
 import '../../payment/ui/payment_chooser.dart';
+import '../../payment/ui/payment_gateway_screen.dart';
 import '../data/checkout_models.dart';
 import '../data/checkout_repository.dart';
 import '../state/checkout_flow.dart';
@@ -53,15 +56,30 @@ class CheckoutScreen extends ConsumerWidget {
             _StepHeader(step: flow.step),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                 children: [
-                  switch (flow.step) {
-                    0 => _CartReview(cart: c),
-                    1 => _DeliveryStep(
-                        key: ValueKey('delivery-${flow.formVersion}')),
-                    2 => const _PaymentStep(),
-                    _ => _ConfirmStep(cart: c),
-                  },
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 280),
+                    transitionBuilder: (child, a) => FadeTransition(
+                      opacity: a,
+                      child: SlideTransition(
+                        position: Tween(
+                                begin: const Offset(0.06, 0), end: Offset.zero)
+                            .animate(a),
+                        child: child,
+                      ),
+                    ),
+                    child: KeyedSubtree(
+                      key: ValueKey(flow.step),
+                      child: switch (flow.step) {
+                        0 => _CartReview(cart: c),
+                        1 => _DeliveryStep(
+                            key: ValueKey('delivery-${flow.formVersion}')),
+                        2 => _PaymentStep(amountSen: c.grandTotalSen),
+                        _ => _ConfirmStep(cart: c),
+                      },
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -77,16 +95,50 @@ class _StepHeader extends StatelessWidget {
   const _StepHeader({required this.step});
   final int step;
 
+  static const _icons = [
+    Icons.shopping_bag_outlined,
+    Icons.local_shipping_outlined,
+    Icons.payments_outlined,
+    Icons.fact_check_outlined,
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          for (var i = 0; i < 4; i++) ...[
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 260),
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: i <= step ? kHeroGradient : null,
+                color: i <= step ? null : const Color(0xFFEDE6D9),
+              ),
+              child: Icon(i < step ? Icons.check : _icons[i],
+                  size: 18, color: i <= step ? Colors.white : kMuted),
+            ),
+            if (i < 3)
+              Expanded(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 260),
+                  height: 3,
+                  margin: const EdgeInsets.symmetric(horizontal: 6),
+                  decoration: BoxDecoration(
+                    color: i < step ? kPrimary : const Color(0xFFEDE6D9),
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                ),
+              ),
+          ],
+        ]),
+        const SizedBox(height: 10),
         Text('Step ${step + 1} of 4: ${checkoutStepTitles[step]}',
             key: const Key('stepTitle'),
             style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 8),
-        LinearProgressIndicator(value: (step + 1) / 4),
       ]),
     );
   }
@@ -96,63 +148,98 @@ class _StepButtons extends ConsumerWidget {
   const _StepButtons({required this.cart});
   final CheckoutCart cart;
 
+  Future<void> _placeOrder(BuildContext context, WidgetRef ref) async {
+    final notifier = ref.read(checkoutFlowProvider.notifier);
+    final flow = ref.read(checkoutFlowProvider);
+    final channel = flow.channel ??
+        PaymentChannel.values.firstWhere((c) => c.method == flow.method,
+            orElse: () => PaymentChannel.cod);
+    if (channel != PaymentChannel.cod) {
+      final outcome = await openPaymentGateway(context,
+          channel: channel,
+          providerId: flow.providerId,
+          amountSen: cart.grandTotalSen);
+      if (outcome == null) return; // closed without deciding: no order
+      notifier.chooseOutcome(outcome);
+    }
+    final id = await notifier.submit();
+    if (id != null && context.mounted) context.go('/confirmation/$id');
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final flow = ref.watch(checkoutFlowProvider);
     final notifier = ref.read(checkoutFlowProvider.notifier);
     final blocked = flow.step == 0 && cart.hasUnavailable;
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          if (flow.error != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(flow.error!,
-                  key: const Key('checkoutError'),
-                  style: TextStyle(color: Theme.of(context).colorScheme.error)),
-            ),
-          for (final s in flow.shortages) Text(s.text),
-          Row(children: [
-            if (flow.step > 0)
+    final isCod = flow.method == 'cod';
+    return Container(
+      decoration: BoxDecoration(
+        color: kCard,
+        boxShadow: softShadow(0.10),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            if (flow.error != null)
               Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: OutlinedButton(
-                    onPressed: flow.submitting
-                        ? null
-                        : () => notifier.goTo(flow.step - 1),
-                    child: const Text('Back')),
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(flow.error!,
+                    key: const Key('checkoutError'),
+                    style: const TextStyle(color: kError)),
               ),
-            Expanded(
-              child: FilledButton(
-                key: const Key('stepNext'),
-                onPressed: blocked || flow.submitting
-                    ? null
-                    : () async {
-                        switch (flow.step) {
-                          case 0:
-                            notifier.goTo(1);
-                          case 1:
-                            notifier.continueFromDelivery();
-                          case 2:
-                            notifier.continueFromPayment();
-                          default:
-                            final id = await notifier.submit();
-                            if (id != null && context.mounted) {
-                              context.go('/confirmation/$id');
-                            }
-                        }
-                      },
-                child: Text(switch (flow.step) {
-                  0 => 'Continue to delivery',
-                  1 => 'Continue to payment',
-                  2 => 'Review order',
-                  _ => flow.submitting ? 'Placing order...' : 'Place order (demo)',
-                }),
+            for (final s in flow.shortages) Text(s.text),
+            Row(children: [
+              const Text('Total', style: TextStyle(color: kMuted)),
+              const Spacer(),
+              Text(formatRm(cart.grandTotalSen),
+                  style: Theme.of(context).textTheme.titleLarge),
+            ]),
+            const SizedBox(height: 10),
+            Row(children: [
+              if (flow.step > 0)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: OutlinedButton(
+                      onPressed: flow.submitting
+                          ? null
+                          : () => notifier.goTo(flow.step - 1),
+                      child: const Text('Back')),
+                ),
+              Expanded(
+                child: FilledButton(
+                  key: const Key('stepNext'),
+                  onPressed: blocked || flow.submitting
+                      ? null
+                      : () async {
+                          switch (flow.step) {
+                            case 0:
+                              notifier.goTo(1);
+                            case 1:
+                              notifier.continueFromDelivery();
+                            case 2:
+                              notifier.continueFromPayment();
+                            default:
+                              await _placeOrder(context, ref);
+                          }
+                        },
+                  child: Text(switch (flow.step) {
+                    0 => 'Continue to delivery',
+                    1 => 'Continue to payment',
+                    2 => 'Review order',
+                    _ => flow.submitting
+                        ? 'Placing order...'
+                        : isCod
+                            ? 'Place order'
+                            : 'Pay ${formatRm(cart.grandTotalSen)}',
+                  }),
+                ),
               ),
-            ),
+            ]),
           ]),
-        ]),
+        ),
       ),
     );
   }
@@ -165,17 +252,51 @@ class _CartReview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      for (final l in cart.lines)
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          title: Text(l.name),
-          subtitle: Text(l.available
-              ? '${l.variationLabel ?? ''} Qty ${l.quantity}'.trim()
-              : 'No longer available. Remove it from your cart to continue.'),
-          trailing: Text(formatRm(l.lineTotalSen)),
+      for (final (i, l) in cart.lines.indexed)
+        FadeSlideIn(
+          index: i,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: SoftCard(
+              padding: const EdgeInsets.all(12),
+              child: Row(children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF3EEE4),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text('${l.quantity}x',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w800, color: kPrimary)),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(l.name,
+                            style: Theme.of(context).textTheme.titleSmall),
+                        Text(
+                            l.available
+                                ? '${l.variationLabel ?? ''} Qty ${l.quantity}'
+                                    .trim()
+                                : 'No longer available. Remove it from your cart to continue.',
+                            style: TextStyle(
+                                fontSize: 12,
+                                color: l.available ? kMuted : kError)),
+                      ]),
+                ),
+                Text(formatRm(l.lineTotalSen),
+                    style: const TextStyle(fontWeight: FontWeight.w700)),
+              ]),
+            ),
+          ),
         ),
-      const Divider(),
-      _TotalLines(cart: cart),
+      const SizedBox(height: 6),
+      SoftCard(child: _TotalLines(cart: cart)),
       if (cart.hasUnavailable)
         TextButton(
             onPressed: () => context.go('/cart'),
@@ -189,15 +310,18 @@ class _TotalLines extends StatelessWidget {
   final CheckoutCart cart;
 
   Widget _row(String a, String b, {bool bold = false}) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 2),
+        padding: const EdgeInsets.symmetric(vertical: 3),
         child: Row(children: [
           Expanded(
               child: Text(a,
                   style: TextStyle(
-                      fontWeight: bold ? FontWeight.bold : FontWeight.normal))),
+                      fontSize: bold ? 16 : 14,
+                      color: bold ? kText : kMuted,
+                      fontWeight: bold ? FontWeight.w800 : FontWeight.w500))),
           Text(b,
               style: TextStyle(
-                  fontWeight: bold ? FontWeight.bold : FontWeight.normal)),
+                  fontSize: bold ? 16 : 14,
+                  fontWeight: bold ? FontWeight.w800 : FontWeight.w600)),
         ]),
       );
 
@@ -205,6 +329,7 @@ class _TotalLines extends StatelessWidget {
   Widget build(BuildContext context) => Column(children: [
         _row('Subtotal', formatRm(cart.subtotalSen)),
         _row('Delivery', formatRm(cart.deliveryFeeSen)),
+        const Divider(height: 16),
         _row('Total', formatRm(cart.grandTotalSen), bold: true),
       ]);
 }
@@ -254,7 +379,11 @@ class _DeliveryStepState extends ConsumerState<_DeliveryStep> {
   }
 
   Widget _field(String key, String label,
-      {TextInputType? type, int maxLines = 1, int? maxLength}) {
+      {TextInputType? type,
+      int maxLines = 1,
+      int? maxLength,
+      IconData? icon,
+      String? hint}) {
     final errors = ref.watch(checkoutFlowProvider.select((s) => s.errors));
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -267,8 +396,9 @@ class _DeliveryStepState extends ConsumerState<_DeliveryStep> {
         onChanged: (_) => _push(),
         decoration: InputDecoration(
           labelText: label,
+          hintText: hint,
           errorText: errors[key],
-          border: const OutlineInputBorder(),
+          prefixIcon: icon == null ? null : Icon(icon),
         ),
       ),
     );
@@ -280,52 +410,63 @@ class _DeliveryStepState extends ConsumerState<_DeliveryStep> {
     final stateValue = malaysianStates.contains(flow.delivery.state)
         ? flow.delivery.state
         : null;
-    return Column(children: [
-      _field('name', 'Full name'),
-      _field('phone', 'Phone', type: TextInputType.phone),
-      _field('email', 'Email', type: TextInputType.emailAddress),
-      _field('address', 'Address', maxLines: 3),
-      _field('postcode', 'Postcode', type: TextInputType.number),
-      Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: DropdownButtonFormField<String>(
-          key: Key('field-state-${flow.formVersion}'),
-          initialValue: stateValue,
-          isExpanded: true,
-          decoration: InputDecoration(
-            labelText: 'State',
-            errorText: flow.errors['state'],
-            border: const OutlineInputBorder(),
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text('Where should we deliver?',
+          style: Theme.of(context).textTheme.headlineSmall),
+      const SizedBox(height: 14),
+      _field('name', 'Full name', icon: Icons.person_outline),
+      _field('phone', 'Phone',
+          type: TextInputType.phone,
+          icon: Icons.phone_outlined,
+          hint: '012-345 6789'),
+      _field('email', 'Email',
+          type: TextInputType.emailAddress, icon: Icons.mail_outline),
+      _field('address', 'Address', maxLines: 3, icon: Icons.home_outlined),
+      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Expanded(
+            child: _field('postcode', 'Postcode',
+                type: TextInputType.number, hint: '50450')),
+        const SizedBox(width: 10),
+        Expanded(
+          flex: 2,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: DropdownButtonFormField<String>(
+              key: Key('field-state-${flow.formVersion}'),
+              initialValue: stateValue,
+              isExpanded: true,
+              decoration: InputDecoration(
+                labelText: 'State',
+                errorText: flow.errors['state'],
+              ),
+              items: [
+                for (final s in malaysianStates)
+                  DropdownMenuItem(value: s, child: Text(s)),
+              ],
+              onChanged: (v) => _push(state: v ?? ''),
+            ),
           ),
-          items: [
-            for (final s in malaysianStates)
-              DropdownMenuItem(value: s, child: Text(s)),
-          ],
-          onChanged: (v) => _push(state: v ?? ''),
         ),
-      ),
+      ]),
       _field('notes', 'Delivery notes (optional)', maxLines: 2, maxLength: 500),
     ]);
   }
 }
 
 class _PaymentStep extends ConsumerWidget {
-  const _PaymentStep();
+  const _PaymentStep({required this.amountSen});
+  final int amountSen;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final flow = ref.watch(checkoutFlowProvider);
     final notifier = ref.read(checkoutFlowProvider.notifier);
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const DemoLabel.payment(),
-      const SizedBox(height: 12),
-      PaymentChooser(
-        method: flow.method,
-        outcome: flow.outcome,
-        onMethod: notifier.chooseMethod,
-        onOutcome: notifier.chooseOutcome,
-      ),
-    ]);
+    return PaymentChooser(
+      channel: flow.channel,
+      providerId: flow.providerId,
+      amountSen: amountSen,
+      onChanged: (c, p) => notifier.chooseChannel(c, providerId: p),
+    );
   }
 }
 
@@ -338,20 +479,50 @@ class _ConfirmStep extends ConsumerWidget {
     final flow = ref.watch(checkoutFlowProvider);
     final d = flow.delivery;
     final method = flow.method;
+    final theme = Theme.of(context);
+    Widget section(IconData icon, String title, Widget body, int step) =>
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: SoftCard(
+            child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Icon(icon, color: kPrimary),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: theme.textTheme.titleMedium),
+                      const SizedBox(height: 4),
+                      body,
+                    ]),
+              ),
+              TextButton(
+                  onPressed: () =>
+                      ref.read(checkoutFlowProvider.notifier).goTo(step),
+                  child: const Text('Edit')),
+            ]),
+          ),
+        );
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const DemoLabel.payment(),
-      const SizedBox(height: 12),
-      Text('Deliver to', style: Theme.of(context).textTheme.titleMedium),
-      Text('${d.name}\n${d.address}\n${d.postcode} ${d.state}\n${d.phone}\n${d.email}'),
-      if (d.notes.trim().isNotEmpty) Text('Notes: ${d.notes.trim()}'),
-      const SizedBox(height: 12),
-      Text('Payment', style: Theme.of(context).textTheme.titleMedium),
-      Text(method == null
-          ? ''
-          : '${paymentMethodLabel(method)}'
-              '${flow.outcome == null ? '' : ', simulated outcome: ${outcomeLabel(flow.outcome!)}'}'),
-      const SizedBox(height: 12),
-      _TotalLines(cart: cart),
+      Text('Review your order', style: theme.textTheme.headlineSmall),
+      const SizedBox(height: 14),
+      section(
+          Icons.location_on_outlined,
+          'Deliver to',
+          Text(
+              '${d.name}\n${d.address}\n${d.postcode} ${d.state}\n${d.phone}\n${d.email}'
+              '${d.notes.trim().isNotEmpty ? '\nNotes: ${d.notes.trim()}' : ''}'),
+          1),
+      section(
+          Icons.payments_outlined,
+          'Payment',
+          Text(method == null
+              ? ''
+              : flow.channel != null
+                  ? paymentSummary(flow.channel, flow.providerId)
+                  : paymentMethodLabel(method)),
+          2),
+      SoftCard(child: _TotalLines(cart: cart)),
     ]);
   }
 }

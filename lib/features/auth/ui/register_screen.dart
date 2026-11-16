@@ -5,7 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/network/app_failure.dart';
 import '../../../core/validators.dart';
 import '../state/auth_actions.dart';
-import 'fictional_data_notice.dart';
+import '../../../app/theme.dart';
+import '../../../core/widgets/ui_kit.dart';
 import 'login_screen.dart' show loginErrorMessage;
 
 // Tooltips for the visibility toggle.
@@ -117,12 +118,31 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const FictionalDataNotice(),
-                const SizedBox(height: 16),
+                const GradientPanel(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(Icons.auto_awesome, color: kAccent, size: 30),
+                      SizedBox(height: 10),
+                      Text('Join SageMaker',
+                          style: TextStyle(
+                              fontFamily: kDisplayFont,
+                              color: Colors.white,
+                              fontSize: 26,
+                              fontWeight: FontWeight.w700)),
+                      SizedBox(height: 4),
+                      Text(
+                          'Save favourites, track orders and request custom pieces.',
+                          style: TextStyle(color: Colors.white70)),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
                 TextFormField(
                   controller: _name,
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(labelText: 'Name'),
+                  decoration: const InputDecoration(
+                      labelText: 'Name', prefixIcon: Icon(Icons.person_outline)),
                   validator: (v) => _field('name', validateRegisterName(v)),
                 ),
                 const SizedBox(height: 12),
@@ -131,7 +151,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   keyboardType: TextInputType.emailAddress,
                   autofillHints: const [AutofillHints.email],
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(labelText: 'Email'),
+                  decoration: const InputDecoration(
+                      labelText: 'Email', prefixIcon: Icon(Icons.mail_outline)),
                   validator: (v) => _field('email', validateEmail(v)),
                 ),
                 const SizedBox(height: 12),

@@ -1,14 +1,17 @@
 /// Models for the checkout, payment and confirmation flow (Req 12, 13).
 library;
 
-const paymentMethods = ['card', 'fpx', 'ewallet', 'cod'];
+/// Payment methods the API accepts.
+const paymentMethods = ['fpx', 'ewallet', 'card', 'cod'];
+
+/// Gateway results the API accepts for non-COD payments.
 const simulatedOutcomes = ['success', 'failed', 'cancelled'];
 
 String paymentMethodLabel(String method) => switch (method) {
-      'card' => 'Card (demo)',
-      'fpx' => 'FPX online banking (demo)',
-      'ewallet' => 'E-wallet (demo)',
-      'cod' => 'Cash on delivery',
+      'card' => 'Credit / Debit Card',
+      'fpx' => 'FPX Online Banking',
+      'ewallet' => 'E-wallet / DuitNow QR',
+      'cod' => 'Cash on Delivery',
       _ => method,
     };
 

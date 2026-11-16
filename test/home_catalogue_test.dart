@@ -144,7 +144,7 @@ void main() {
         FakeRepo()));
     expect(find.text('Out of stock'), findsWidgets);
     expect(find.text('Made by Aminah'), findsOneWidget);
-    expect(find.text('Demo'), findsWidgets);
+    expect(find.text('Demo'), findsNothing);
     final btn =
         tester.widget<FilledButton>(find.byKey(const Key('add-to-cart')));
     expect(btn.onPressed, isNull);

@@ -285,13 +285,14 @@ String formatLocalDateTime(DateTime t) {
 String paymentMethodLabel(String m) {
   switch (m) {
     case 'card':
-      return 'Card (demo)';
+      return 'Credit / Debit Card';
+    case 'fpx':
     case 'online_banking':
-      return 'Online banking (demo)';
+      return 'FPX Online Banking';
     case 'ewallet':
-      return 'E-wallet (demo)';
+      return 'E-wallet / DuitNow QR';
     case 'cod':
-      return 'Cash on delivery (demo)';
+      return 'Cash on Delivery';
     default:
       return m.isEmpty ? 'Not set' : m.replaceAll('_', ' ');
   }
@@ -300,13 +301,13 @@ String paymentMethodLabel(String m) {
 String paymentStatusLabel(String s) {
   switch (s) {
     case 'paid':
-      return 'Paid (simulated)';
+      return 'Paid';
     case 'pending_cod':
       return 'Pay on delivery';
     case 'failed':
       return 'Failed';
     case 'demo_simulated_not_charged':
-      return 'Simulated, not charged';
+      return 'Not charged';
     default:
       return s.isEmpty ? 'Unknown' : s.replaceAll('_', ' ');
   }

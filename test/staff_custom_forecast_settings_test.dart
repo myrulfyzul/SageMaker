@@ -170,7 +170,7 @@ void main() {
     expect(find.byKey(const ValueKey('replenish-flag')), findsOneWidget);
     expect(find.textContaining('MAE 0.5'), findsOneWidget);
     expect(find.textContaining('Hold out two months.'), findsOneWidget);
-    expect(find.textContaining('Demo'), findsWidgets);
+    expect(find.textContaining('estimates from your sales history'), findsOneWidget);
   });
 
   testWidgets('forecast shows insufficient history and error hides chart',

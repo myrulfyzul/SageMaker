@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/network/app_failure.dart';
 import '../../../../core/widgets/async_value_view.dart';
-import '../../../../core/widgets/demo_label.dart';
 import '../../analytics/ui/chart_cards.dart';
 import '../../inventory/data/inventory_models.dart';
 import '../../inventory/state/inventory_provider.dart';
@@ -52,7 +51,8 @@ class _ForecastingScreenState extends ConsumerState<ForecastingScreen> {
           padding: EdgeInsets.all(12),
           child: Align(
               alignment: Alignment.centerLeft,
-              child: DemoLabel('Demo: forecasts use demonstration data')),
+              child: Text('Forecasts are estimates from your sales history. Use them to plan production, not as guarantees.',
+                  style: TextStyle(fontSize: 12, color: Color(0xFF5E6B66)))),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),

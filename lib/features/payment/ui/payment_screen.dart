@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/theme.dart';
 import '../../../core/money.dart';
 import '../../../core/network/app_failure.dart';
-import '../../../core/widgets/demo_label.dart';
 import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/loading_view.dart';
+import '../../../core/widgets/ui_kit.dart';
 import '../../checkout/data/checkout_models.dart';
 import '../../checkout/data/checkout_repository.dart';
 import '../../checkout/state/checkout_flow.dart' show couldNotProcessMessage;
+import '../data/malaysia_payments.dart';
 import 'payment_chooser.dart';
+import 'payment_gateway_screen.dart';
 
 /// Retry payment for an order in `payment_failed` (Req 13.11, 13.12, 13.13).
 class PaymentScreen extends ConsumerStatefulWidget {
@@ -22,17 +25,23 @@ class PaymentScreen extends ConsumerStatefulWidget {
 }
 
 class _PaymentScreenState extends ConsumerState<PaymentScreen> {
-  String? _method;
-  String? _outcome;
+  PaymentChannel? _channel;
+  String? _providerId;
   bool _busy = false;
   String? _error;
   List<StockShortage> _shortages = const [];
 
   bool get _ready =>
-      _method != null && (!methodNeedsOutcome(_method!) || _outcome != null);
+      _channel != null && (!_channel!.needsProvider || _providerId != null);
 
-  Future<void> _submit() async {
+  Future<void> _submit(int amountSen) async {
     if (_busy || !_ready) return;
+    String? outcome;
+    if (_channel != PaymentChannel.cod) {
+      outcome = await openPaymentGateway(context,
+          channel: _channel!, providerId: _providerId, amountSen: amountSen);
+      if (outcome == null || !mounted) return;
+    }
     setState(() {
       _busy = true;
       _error = null;
@@ -41,7 +50,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     try {
       await ref
           .read(checkoutRepositoryProvider)
-          .retryPayment(widget.orderId, _method!, _outcome);
+          .retryPayment(widget.orderId, _channel!.method, outcome);
       ref.invalidate(placedOrderProvider(widget.orderId));
       if (mounted) context.go('/confirmation/${widget.orderId}');
     } on ConflictFailure catch (e) {
@@ -93,33 +102,52 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
             );
           }
           return ListView(padding: const EdgeInsets.all(16), children: [
-            const Align(
-                alignment: Alignment.centerLeft, child: DemoLabel.payment()),
-            const SizedBox(height: 12),
-            Text('Order ${o.id}',
-                style: Theme.of(context).textTheme.titleMedium),
-            Text('Amount: ${formatRm(o.totalSen)}'),
-            const SizedBox(height: 16),
+            GradientPanel(
+              child: Row(children: [
+                Expanded(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Order ${o.id}',
+                            style: const TextStyle(color: Colors.white70)),
+                        const SizedBox(height: 4),
+                        Text(formatRm(o.totalSen),
+                            style: const TextStyle(
+                                fontFamily: kDisplayFont,
+                                color: Colors.white,
+                                fontSize: 30,
+                                fontWeight: FontWeight.w700)),
+                      ]),
+                ),
+                const Icon(Icons.replay_circle_filled,
+                    color: kAccent, size: 40),
+              ]),
+            ),
+            const SizedBox(height: 20),
             PaymentChooser(
-              method: _method,
-              outcome: _outcome,
-              onMethod: (m) => setState(() {
-                _method = m;
-                if (!methodNeedsOutcome(m)) _outcome = null;
+              channel: _channel,
+              providerId: _providerId,
+              amountSen: o.totalSen,
+              onChanged: (c, p) => setState(() {
+                _channel = c;
+                _providerId = p;
               }),
-              onOutcome: (v) => setState(() => _outcome = v),
             ),
             if (_error != null) ...[
               const SizedBox(height: 12),
               Text(_error!,
                   key: const Key('paymentError'),
-                  style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                  style: const TextStyle(color: kError)),
               for (final s in _shortages) Text(s.text),
             ],
             const SizedBox(height: 16),
             FilledButton(
-              onPressed: _ready && !_busy ? _submit : null,
-              child: Text(_busy ? 'Processing...' : 'Pay (demo)'),
+              onPressed: _ready && !_busy ? () => _submit(o.totalSen) : null,
+              child: Text(_busy
+                  ? 'Processing...'
+                  : _channel == PaymentChannel.cod
+                      ? 'Confirm cash on delivery'
+                      : 'Pay ${formatRm(o.totalSen)}'),
             ),
           ]);
         },

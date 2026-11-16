@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/money.dart';
-import '../../../core/widgets/demo_label.dart';
 import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/loading_view.dart';
 import '../data/order_models.dart';
@@ -70,7 +69,6 @@ class _OrderBody extends StatelessWidget {
       children: [
         Row(children: [
           Expanded(child: Text(order.id, style: textTheme.titleMedium)),
-          const DemoLabel.item(),
         ]),
         const SizedBox(height: 4),
         Text('Status: ${orderStatusLabel(order.status)}',
@@ -123,8 +121,6 @@ class _OrderBody extends StatelessWidget {
         const Divider(),
         _row('Payment method', paymentMethodLabel(order.paymentMethod)),
         _row('Payment status', paymentStatusLabel(order.paymentStatus)),
-        const SizedBox(height: 8),
-        const DemoLabel.payment(),
       ],
     );
   }

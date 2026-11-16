@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app/router.dart';
 import 'app/theme.dart';
-import 'features/auth/ui/fictional_data_notice.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    systemNavigationBarColor: kBackground,
+    systemNavigationBarIconBrightness: Brightness.dark,
+  ));
   runApp(const ProviderScope(child: SagemakerApp()));
 }
 
@@ -16,12 +21,10 @@ class SagemakerApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp.router(
-      title: 'Sagemaker Asia',
+      title: 'SageMaker',
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),
       routerConfig: ref.watch(routerProvider),
-      builder: (context, child) =>
-          FirstLaunchNoticeGate(child: child ?? const SizedBox()),
     );
   }
 }

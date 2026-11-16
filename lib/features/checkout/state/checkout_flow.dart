@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/app_failure.dart';
 import '../../../core/validators.dart';
 import '../../auth/state/session_provider.dart';
+import '../../payment/data/malaysia_payments.dart';
 import '../data/checkout_models.dart';
 import '../data/checkout_repository.dart';
 
@@ -49,6 +50,8 @@ class CheckoutState {
     this.delivery = const DeliveryForm(),
     this.errors = const {},
     this.method,
+    this.channel,
+    this.providerId,
     this.outcome,
     this.idempotencyKey,
     this.submitting = false,
@@ -62,6 +65,14 @@ class CheckoutState {
   final DeliveryForm delivery;
   final Map<String, String> errors;
   final String? method;
+
+  /// Checkout channel (FPX, e-wallet, DuitNow QR, card or COD).
+  final PaymentChannel? channel;
+
+  /// Chosen bank or e-wallet id, kept on this device.
+  final String? providerId;
+
+  /// Result reported by the payment gateway screen.
   final String? outcome;
 
   /// Created once per attempt and reused until the order is placed.
@@ -74,14 +85,18 @@ class CheckoutState {
   /// Bumped when the form is replaced from outside (address prefill).
   final int formVersion;
 
+  /// A method is chosen, and a bank or wallet when the channel needs one.
   bool get paymentChosen =>
-      method != null && (!methodNeedsOutcome(method!) || outcome != null);
+      method != null && (channel?.needsProvider != true || providerId != null);
 
   CheckoutState copyWith({
     int? step,
     DeliveryForm? delivery,
     Map<String, String>? errors,
     String? method,
+    PaymentChannel? channel,
+    String? providerId,
+    bool clearProvider = false,
     String? outcome,
     bool clearOutcome = false,
     String? idempotencyKey,
@@ -97,6 +112,8 @@ class CheckoutState {
         delivery: delivery ?? this.delivery,
         errors: errors ?? this.errors,
         method: method ?? this.method,
+        channel: channel ?? this.channel,
+        providerId: clearProvider ? null : (providerId ?? this.providerId),
         outcome: clearOutcome ? null : (outcome ?? this.outcome),
         idempotencyKey: idempotencyKey ?? this.idempotencyKey,
         submitting: submitting ?? this.submitting,
@@ -146,6 +163,17 @@ class CheckoutFlow extends Notifier<CheckoutState> {
       clearOutcome: !methodNeedsOutcome(method),
       clearError: true);
 
+  /// Picks a checkout channel; switching channel clears the bank or wallet.
+  void chooseChannel(PaymentChannel channel, {String? providerId}) =>
+      state = state.copyWith(
+        method: channel.method,
+        channel: channel,
+        providerId: providerId,
+        clearProvider: providerId == null && channel != state.channel,
+        clearOutcome: true,
+        clearError: true,
+      );
+
   void chooseOutcome(String outcome) =>
       state = state.copyWith(outcome: outcome, clearError: true);
 
@@ -154,7 +182,9 @@ class CheckoutFlow extends Notifier<CheckoutState> {
       state = state.copyWith(
           error: state.method == null
               ? 'Choose a payment method.'
-              : 'Choose a simulated outcome.');
+              : state.channel == PaymentChannel.fpx
+                  ? 'Choose your bank.'
+                  : 'Choose your e-wallet.');
       return false;
     }
     state = state.copyWith(step: 3, clearError: true);
@@ -172,6 +202,10 @@ class CheckoutFlow extends Notifier<CheckoutState> {
     }
     if (!state.paymentChosen) {
       state = state.copyWith(step: 2, error: 'Choose a payment method.');
+      return null;
+    }
+    if (methodNeedsOutcome(state.method!) && state.outcome == null) {
+      state = state.copyWith(error: 'Complete the payment to place your order.');
       return null;
     }
     final key = state.idempotencyKey ?? newIdempotencyKey();

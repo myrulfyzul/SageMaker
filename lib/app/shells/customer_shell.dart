@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/widgets/badge_count.dart';
 import '../../features/cart/state/cart_provider.dart';
+import '../theme.dart';
 
 /// Number of items in the cart, shown as the Cart badge (Req 18.4 to 18.6).
 /// Follows the real cart (server cart when signed in, guest cart otherwise).
@@ -43,7 +44,8 @@ class CustomerShell extends ConsumerWidget {
     final cartCount = ref.watch(cartItemCountProvider);
     return Scaffold(
       body: navigationShell,
-      bottomNavigationBar: NavigationBar(
+      bottomNavigationBar: _FloatingBar(
+          child: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
         onDestinationSelected: (i) => navigationShell.goBranch(
           i,
@@ -65,7 +67,32 @@ class CustomerShell extends ConsumerWidget {
                   : Icon(customerDestinations[i].selectedIcon),
             ),
         ],
-      ),
+      )),
     );
   }
+}
+
+/// Rounded, shadowed container that lifts the navigation bar off the edge.
+class _FloatingBar extends StatelessWidget {
+  const _FloatingBar({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(26),
+              boxShadow: softShadow(0.14),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(26),
+              child: MediaQuery.removePadding(
+                  context: context, removeBottom: true, child: child),
+            ),
+          ),
+        ),
+      );
 }

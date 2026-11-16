@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/money.dart';
 import '../../../../core/network/app_failure.dart';
 import '../../../../core/widgets/async_value_view.dart';
-import '../../../../core/widgets/demo_label.dart';
 import '../../../custom_orders/data/custom_order_models.dart';
 import '../../products/data/admin_product_validation.dart';
 import '../data/staff_custom_orders.dart';
@@ -110,7 +109,6 @@ class _OrderCard extends ConsumerWidget {
                     style: Theme.of(context).textTheme.titleMedium)),
             Chip(label: Text(customOrderStatusLabel(o.status))),
           ]),
-          if (o.isDemo) const Align(alignment: Alignment.centerLeft, child: DemoLabel.item()),
           Text(o.description, maxLines: 3, overflow: TextOverflow.ellipsis),
           Text('Quantity ${o.quantity} · Preferred ${o.preferredDate}'),
           if (o.estimatedPriceSen != null)

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/money.dart';
-import '../../../../core/widgets/demo_label.dart';
 import '../../../../core/widgets/error_view.dart';
 import '../../../../core/widgets/loading_view.dart';
 import '../../analytics/data/analytics_models.dart';
@@ -40,12 +39,8 @@ class DashboardScreen extends ConsumerWidget {
               ],
             ),
           if (d.hasData)
-            const Padding(
-              padding: EdgeInsets.fromLTRB(12, 8, 12, 0),
-              child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: DemoLabel('Demo data')),
-            ),
+            const SizedBox.shrink(),
+
           _KpiGrid(kpis: d.kpis),
           ChartCard(
             title: 'Sales by month',

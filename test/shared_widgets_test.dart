@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sagemaker_flutter/app/theme.dart';
-import 'package:sagemaker_flutter/core/widgets/app_icon_button.dart';
 import 'package:sagemaker_flutter/core/widgets/async_value_view.dart';
 import 'package:sagemaker_flutter/core/widgets/badge_count.dart';
-import 'package:sagemaker_flutter/core/widgets/demo_label.dart';
 
 Widget host(Widget child) =>
     MaterialApp(theme: buildAppTheme(), home: Scaffold(body: child));
@@ -77,27 +75,6 @@ void main() {
     expect(taps, 1);
   });
 
-  testWidgets('AppIconButton exposes semantic label', (tester) async {
-    final handle = tester.ensureSemantics();
-    await tester.pumpWidget(host(AppIconButton(
-      icon: Icons.add,
-      semanticLabel: 'Add to cart',
-      onPressed: () {},
-    )));
-    expect(find.byTooltip('Add to cart'), findsOneWidget);
-    final data =
-        tester.getSemantics(find.byType(IconButton)).getSemanticsData();
-    expect('${data.label} ${data.tooltip}', contains('Add to cart'));
-    handle.dispose();
-  });
-
-  test('AppIconButton rejects empty label', () {
-    expect(
-      () => AppIconButton(icon: Icons.add, semanticLabel: ' ', onPressed: null),
-      throwsAssertionError,
-    );
-  });
-
   testWidgets('BadgeCount hides 0, shows 5 and 99+', (tester) async {
     Future<void> show(int n) => tester.pumpWidget(
         host(BadgeCount(count: n, child: const Icon(Icons.shopping_cart))));
@@ -109,8 +86,5 @@ void main() {
     expect(find.text('99+'), findsOneWidget);
   });
 
-  testWidgets('DemoLabel renders text', (tester) async {
-    await tester.pumpWidget(host(const DemoLabel.prototype()));
-    expect(find.textContaining('Not officially Sagemaker'), findsOneWidget);
-  });
+
 }

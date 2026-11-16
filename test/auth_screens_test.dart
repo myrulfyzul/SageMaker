@@ -43,12 +43,10 @@ Future<ProviderContainer> _pump(
 
 void main() {
   group('LoginScreen', () {
-    testWidgets('shows Demo_Label on screen without scrolling', (tester) async {
+    testWidgets('shows the SageMaker brand without scrolling', (tester) async {
       await _pump(tester, (_) async => _json({}, 401));
-      expect(
-          find.text(
-              'Independent university prototype. Not officially Sagemaker.'),
-          findsOneWidget);
+      expect(find.text('SageMaker'), findsOneWidget);
+      expect(find.textContaining('prototype'), findsNothing);
     });
 
     testWidgets('429 shows remaining seconds and disables sign in',
@@ -92,11 +90,12 @@ void main() {
   });
 
   group('RegisterScreen', () {
-    testWidgets('fictional-data notice visible without scrolling',
+    testWidgets('welcome header visible and no fictional-data notice',
         (tester) async {
       await _pump(tester, (_) async => _json({}),
           screen: const RegisterScreen());
-      expect(find.textContaining('fictional'), findsOneWidget);
+      expect(find.text('Join SageMaker'), findsOneWidget);
+      expect(find.textContaining('fictional'), findsNothing);
     });
 
     testWidgets('local validation errors; 422 field errors shown',

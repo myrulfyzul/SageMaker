@@ -60,64 +60,64 @@ MSG_CANCELLED = 'Reset cancelled'
 
 # (key, display name, e-mail, role, phone, password env var, documented DEMO-ONLY default)
 ACCOUNTS = [
-    ('customer1', 'Demo Customer One', 'demo.customer1@example.com', 'customer', '0123456701',
+    ('customer1', 'Nur Aisyah', 'demo.customer1@example.com', 'customer', '0123456701',
      'DEMO_CUSTOMER_PASSWORD', 'DemoCustomer1!'),
-    ('customer2', 'Demo Customer Two', 'demo.customer2@example.com', 'customer', '0123456702',
+    ('customer2', 'Tan Mei Xin', 'demo.customer2@example.com', 'customer', '0123456702',
      'DEMO_CUSTOMER_PASSWORD', 'DemoCustomer1!'),
-    ('customer3', 'Demo Customer Three', 'demo.customer3@example.com', 'customer', '0123456703',
+    ('customer3', 'Priya Devi', 'demo.customer3@example.com', 'customer', '0123456703',
      'DEMO_CUSTOMER_PASSWORD', 'DemoCustomer1!'),
-    ('seller', 'Demo Seller', 'demo.seller@example.com', 'seller', '0123456710',
+    ('seller', 'SageMaker Seller', 'demo.seller@example.com', 'seller', '0123456710',
      'DEMO_SELLER_PASSWORD', 'DemoSeller1!'),
-    ('admin', 'Demo Admin', 'demo.admin@example.com', 'admin', '0123456711',
+    ('admin', 'SageMaker Admin', 'demo.admin@example.com', 'admin', '0123456711',
      'DEMO_ADMIN_PASSWORD', 'DemoAdmin1!'),
-    ('artisan', 'Demo Artisan User', 'demo.artisan@example.com', 'artisan', '0123456712',
+    ('artisan', 'Siti Aminah', 'demo.artisan@example.com', 'artisan', '0123456712',
      'DEMO_ARTISAN_PASSWORD', 'DemoArtisan1!'),
 ]
 
 # (name, specialisation, availability, story, private phone, private e-mail, private address)
 ARTISANS = [
     ('Siti Aminah', 'Batik and fabric printing', 'available',
-     'Demo profile. Prints batik panels by hand in small batches.',
-     '0191110001', 'siti.demo@example.com', '1 Jalan Demo, Kota Bharu, Kelantan'),
-    ('Ahmad Zulkifli', 'Wood and felt toys', 'busy',
-     'Demo profile. Makes traditional toys from wood and felt.',
-     '0191110002', 'ahmad.demo@example.com', '2 Jalan Demo, Kuala Terengganu, Terengganu'),
+     'Prints batik panels by hand in small batches.',
+     '0191110001', 'siti.aminah@example.com', '12 Jalan Sultanah Zainab, Kota Bharu, Kelantan'),
+    ('Nurul Huda', 'Wood and felt toys', 'busy',
+     'Makes traditional toys from wood and felt.',
+     '0191110002', 'nurul.huda@example.com', '8 Jalan Kampung Cina, Kuala Terengganu, Terengganu'),
     ('Lim Mei Ling', 'Embroidery and gifts', 'available',
-     'Demo profile. Embroiders gift sets and greeting pouches.',
-     '0191110003', 'mei.demo@example.com', '3 Jalan Demo, George Town, Pulau Pinang'),
-    ('Ravi Kumar', 'Woven accessories', 'unavailable',
-     'Demo profile. Weaves small accessories on a handloom.',
-     '0191110004', 'ravi.demo@example.com', '4 Jalan Demo, Johor Bahru, Johor'),
+     'Embroiders gift sets and greeting pouches.',
+     '0191110003', 'meiling.lim@example.com', '21 Lebuh Armenian, George Town, Pulau Pinang'),
+    ('Kavitha Ramasamy', 'Woven accessories', 'unavailable',
+     'Weaves small accessories on a handloom.',
+     '0191110004', 'kavitha.r@example.com', '5 Jalan Dhoby, Johor Bahru, Johor'),
 ]
 
 # (id, name, description, category slug, price sen, artisan index, made to order, opening stock, threshold)
 PRODUCTS = [
-    ('batik-everyday-tote', 'Batik Everyday Tote', 'DEMO. Lined cotton tote with a batik print.',
+    ('batik-everyday-tote', 'Batik Everyday Tote', 'Lined cotton tote with a batik print.',
      'tote-bags', 3800, 0, False, 120, 5),
-    ('songket-market-tote', 'Songket Market Tote', 'DEMO. Sturdy market tote trimmed with songket.',
+    ('songket-market-tote', 'Songket Market Tote', 'Sturdy market tote trimmed with songket.',
      'tote-bags', 5200, 0, True, 40, 5),
-    ('wau-bulan-plush-kite', 'Wau Bulan Plush Kite', 'DEMO. Soft plush kite inspired by the wau bulan.',
+    ('wau-bulan-plush-kite', 'Wau Bulan Plush Kite', 'Soft plush kite inspired by the wau bulan.',
      'toys', 2900, 1, False, 85, 5),
-    ('gasing-soft-top', 'Gasing Soft Spinning Top', 'DEMO. Felt spinning top for toddlers.',
+    ('gasing-soft-top', 'Gasing Soft Spinning Top', 'Felt spinning top for toddlers.',
      'toys', 2200, 1, False, 2, 5),
-    ('congkak-felt-game', 'Congkak Felt Game', 'DEMO. Travel-size congkak board made of felt.',
+    ('congkak-felt-game', 'Congkak Felt Game', 'Travel-size congkak board made of felt.',
      'toys', 4500, 1, False, 60, 5),
-    ('batik-gift-set', 'Batik Gift Set', 'DEMO. Gift box with a batik pouch, coaster and card.',
+    ('batik-gift-set', 'Batik Gift Set', 'Gift box with a batik pouch, coaster and card.',
      'gifts', 6800, 2, True, 25, 5),
-    ('keris-bookmark-duo', 'Keris Bookmark Duo', 'DEMO. Two embroidered bookmarks.',
+    ('keris-bookmark-duo', 'Keris Bookmark Duo', 'Two embroidered bookmarks.',
      'gifts', 1800, 2, False, 0, 5),
-    ('raya-greeting-pouch', 'Raya Greeting Pouch', 'DEMO. Embroidered pouch for duit raya.',
+    ('raya-greeting-pouch', 'Raya Greeting Pouch', 'Embroidered pouch for duit raya.',
      'gifts', 3000, 2, True, 200, 5),
-    ('tenun-scrunchie-set', 'Tenun Hair Scrunchie Set', 'DEMO. Three woven scrunchies.',
+    ('tenun-scrunchie-set', 'Tenun Hair Scrunchie Set', 'Three woven scrunchies.',
      'accessories', 1600, 3, False, 150, 5),
-    ('batik-passport-cover', 'Batik Passport Cover', 'DEMO. Passport cover in batik cotton.',
+    ('batik-passport-cover', 'Batik Passport Cover', 'Passport cover in batik cotton.',
      'accessories', 3200, 3, False, 5, 5),
-    ('mini-coin-purse', 'Mini Coin Purse', 'DEMO. Zip coin purse in printed cotton.',
+    ('mini-coin-purse', 'Mini Coin Purse', 'Zip coin purse in printed cotton.',
      'accessories', 1500, 3, False, 300, 5),
 ]
 BUNDLED_SLUG = {'Kids & Toys': 'fabric-books', 'Bags': 'tote-bags', 'Accessories': 'accessories'}
 
-DELIVERY = {'address': 'No. 1, Jalan Demo, Taman Demo, Kuala Lumpur', 'postcode': '50000', 'state': 'Kuala Lumpur'}
+DELIVERY = {'address': 'No. 18, Jalan Telawi 3, Bangsar Baru, Kuala Lumpur', 'postcode': '50000', 'state': 'Kuala Lumpur'}
 
 # Fulfilment_Status -> timeline after `placed` (cancelled and payment_failed start in that status, like checkout).
 TIMELINE = {
@@ -215,7 +215,7 @@ def _seed_users(conn: sqlite3.Connection, env: Mapping[str, str]) -> dict[str, d
         conn.execute(
             'INSERT INTO addresses (user_id, recipient_name, phone, line1, line2, postcode, city, state, is_default, '
             'created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,1,?,?)',
-            (user['id'], user['name'], user['phone'], 'No. 1, Jalan Demo', 'Taman Demo', DELIVERY['postcode'],
+            (user['id'], user['name'], user['phone'], 'No. 18, Jalan Telawi 3', 'Bangsar Baru', DELIVERY['postcode'],
              'Kuala Lumpur', DELIVERY['state'], now, now))
     return users
 
@@ -294,7 +294,7 @@ def _advance(conn: sqlite3.Connection, order_id: str, start: str, steps: list[st
         orders_api.update_fields(conn, order_id, status=step, updated_at=_iso(moment))
         orders_api.append_history(conn, order_id, previous, step, None, None, _iso(moment))
         if step == 'shipped':
-            orders_api.update_fields(conn, order_id, shipping_reference=f'DEMO-TRACK-{order_id[-6:]}')
+            orders_api.update_fields(conn, order_id, shipping_reference=f'MY{order_id[-8:].upper()}PL')
         previous = step
 
 
@@ -373,9 +373,9 @@ def _seed_custom_orders(conn: sqlite3.Connection, users: dict[str, dict[str, Any
     ids: dict[str, int] = {}
     for key, owner, status, ptype, desc, qty, estimate, artisan in (
             ('submitted', 'customer1', 'submitted', 'Tote bag',
-             'DEMO request: tote bag with the name of our school embroidered on the front.', 30, None, None),
+             'tote bag with the name of our school embroidered on the front.', 30, None, None),
             ('accepted', 'customer2', 'in_progress', 'Gift pouch',
-             'DEMO request: gift pouches in batik for a wedding, 50 pieces in two colours.', 50, 125000,
+             'gift pouches in batik for a wedding, 50 pieces in two colours.', 50, 125000,
              artisan_ids[0])):
         cur = conn.execute(
             'INSERT INTO custom_orders (user_id, product_type, description, quantity, preferred_date, status, '
@@ -403,14 +403,14 @@ def _seed_jobs(conn: sqlite3.Connection, orders: dict[str, dict[str, Any]], cust
         cur = conn.execute(
             'INSERT INTO production_jobs (order_id, order_line_id, custom_order_id, product_id, artisan_id, '
             'quantity, deadline, priority, status, progress_percent, notes, is_demo, created_at, updated_at) '
-            "VALUES (?,?,?,?,?,?,?,?,?,?,'DEMO job',1,?,?)",
+            "VALUES (?,?,?,?,?,?,?,?,?,?,'Production batch',1,?,?)",
             (order_id, line_id, custom_id, product_id,
              artisan_ids[artisan_index] if artisan_index is not None else None, quantity, deadline, priority,
              status, progress, stamp, stamp))
         job_id = int(cur.lastrowid)
         if progress:
             conn.execute('INSERT INTO production_progress (job_id, percent, note, actor_user_id, created_at) '
-                         'VALUES (?,?,?,NULL,?)', (job_id, progress, 'DEMO progress update', stamp))
+                         'VALUES (?,?,?,NULL,?)', (job_id, progress, 'Progress update', stamp))
         if custom_id is not None:
             conn.execute('UPDATE custom_orders SET production_job_id = ? WHERE id = ?', (job_id, custom_id))
         job_ids.append(job_id)
@@ -429,8 +429,8 @@ def _seed_notifications(conn: sqlite3.Connection, users: dict[str, dict[str, Any
         notifications_api.create(conn, users['seller']['id'], 'low_stock', 'Low stock',
                                  'Gasing Soft Spinning Top is at or below its low-stock threshold.',
                                  ('product', 'gasing-soft-top')),
-        notifications_api.create(conn, users['admin']['id'], 'system', 'Demo data loaded',
-                                 'The demo database was seeded. Every record is marked as demo data.'),
+        notifications_api.create(conn, users['admin']['id'], 'system', 'Welcome to SageMaker',
+                                 'Your store is ready. Products, artisans and sample orders have been loaded.'),
     ]
     _set_demo(conn, 'notifications', ids)
     return len(ids)

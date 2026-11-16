@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/money.dart';
-import '../../../../core/widgets/demo_label.dart';
 import '../../../../core/widgets/loading_view.dart';
 import '../data/analytics_models.dart';
 import '../state/analytics_providers.dart';
@@ -72,12 +71,8 @@ class AnalyticsScreen extends ConsumerWidget {
           if (r == null && s.loading) const SizedBox(height: 200, child: LoadingView()),
           if (r != null) ...[
             if (r.orderCount > 0)
-              const Padding(
-                padding: EdgeInsets.fromLTRB(12, 0, 12, 4),
-                child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: DemoLabel('Demo data')),
-              ),
+              const SizedBox.shrink(),
+
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Row(children: [

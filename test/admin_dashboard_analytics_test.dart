@@ -74,7 +74,7 @@ void main() {
     expect(find.text('Demo data'), findsNothing);
   });
 
-  testWidgets('dashboard shows data, Demo label and chart semantics',
+  testWidgets('dashboard shows data without a demo label and chart semantics',
       (tester) async {
     final handle = tester.ensureSemantics();
     final repo = _FakeRepo(() => DashboardData(
@@ -90,7 +90,7 @@ void main() {
     await tester.pumpWidget(_app(repo, const DashboardScreen()));
     await tester.pumpAndSettle();
     expect(find.text('RM 46.00'), findsOneWidget);
-    expect(find.text('Demo data'), findsOneWidget);
+    expect(find.text('Demo data'), findsNothing);
     expect(find.bySemanticsLabel(RegExp('Sales by month.*RM 46.00')),
         findsOneWidget);
     handle.dispose();

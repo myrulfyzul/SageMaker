@@ -189,12 +189,10 @@ void main() {
     });
   });
 
-  testWidgets('About shows the prototype label without scrolling',
+  testWidgets('About shows the mission without scrolling',
       (tester) async {
     await _pump(tester, const AboutScreen(), (r) async => _json(200, {}));
-    expect(
-        find.text(
-            'Independent university prototype. Not officially Sagemaker.'),
+    expect(find.text('Elevating Creative Women, One Community at a Time'),
         findsOneWidget);
   });
 
