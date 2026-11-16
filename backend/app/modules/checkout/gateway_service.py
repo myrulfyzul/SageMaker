@@ -134,8 +134,11 @@ def _fulfil(conn: sqlite3.Connection, gateway: Any, session: dict[str, Any], rem
     payment_intent = intent.get('id') if isinstance(intent, dict) else intent
     if remote.get('amount_total') != session['amountSen'] or str(remote.get('currency', '')).lower() != 'myr':
         return _refund_and_close(gateway, conn, session, payment_intent, 'The amount paid did not match the order')
+    # Record what Stripe actually charged; the page may offer other methods enabled in the Dashboard.
+    used = payments_api.method_used(intent.get('payment_method') if isinstance(intent, dict) else None)
+    method, provider = used if used is not None else (session['method'], session['provider'])
     body = CheckoutIn(idempotency_key=session['idempotencyKey'], delivery=DeliveryIn(**session['delivery']),
-                      method=session['method'], outcome='success', provider=session['provider'])
+                      method=method, outcome='success', provider=provider)
     try:
         order, _ = service.place_order(conn, session['userId'], body, expected_total_sen=session['amountSen'],
                                        reference=payment_intent)
@@ -162,7 +165,7 @@ def reconcile(conn: sqlite3.Connection, settings: Settings, gateway: Any, sessio
             payments_api.finish_session(conn, session['id'], 'paid', order_id=already['id'])
         return payments_api.get_session(conn, session['id'])  # type: ignore[return-value]
     try:
-        remote = gateway.retrieve_session(session['gatewaySessionId'])
+        remote = gateway.retrieve_session(session['gatewaySessionId'], expand=['payment_intent.payment_method'])
     except payments_api.GatewayError as exc:
         logger.warning('could not read payment session %s: %s', session['id'], exc.message)
         return session

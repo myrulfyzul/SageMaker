@@ -22,6 +22,30 @@ WEBHOOK_TOLERANCE_SECONDS = 300
 STRIPE_METHOD_TYPES = {'fpx': 'fpx', 'ewallet': 'grabpay', 'card': 'card'}
 GATEWAY_EWALLET = 'grabpay'
 
+# Stripe's FPX bank codes -> the provider ids the app and API use.
+STRIPE_FPX_BANKS = {
+    'maybank2u': 'maybank2u', 'maybank2e': 'maybank2u', 'cimb': 'cimb', 'public_bank': 'publicbank', 'rhb': 'rhb',
+    'hong_leong_bank': 'hongleong', 'ambank': 'ambank', 'bank_islam': 'bankislam', 'bsn': 'bsn',
+    'bank_rakyat': 'bankrakyat', 'bank_muamalat': 'muamalat', 'affin_bank': 'affin', 'alliance_bank': 'alliance',
+    'agrobank': 'agrobank', 'hsbc': 'hsbc', 'ocbc': 'ocbc', 'standard_chartered': 'sc', 'uob': 'uob', 'kfh': 'kfh',
+}
+
+
+def method_used(payment_method: object) -> tuple[str, str | None] | None:
+    """(our method, provider) for the payment method Stripe actually charged, or None when unknown. Other
+    methods enabled in the Dashboard (Link, Apple Pay, ...) pay with a card, so they count as card."""
+    if not isinstance(payment_method, dict):
+        return None
+    kind = payment_method.get('type')
+    if kind == 'fpx':
+        bank = (payment_method.get('fpx') or {}).get('bank')
+        return 'fpx', STRIPE_FPX_BANKS.get(str(bank)) if bank else None
+    if kind == 'grabpay':
+        return 'ewallet', GATEWAY_EWALLET
+    if isinstance(kind, str):
+        return 'card', None
+    return None
+
 # (HTTP method, url, headers, body bytes or None) -> (status, parsed JSON body)
 HttpCall = Callable[[str, str, dict[str, str], Optional[bytes]], tuple[int, dict[str, Any]]]
 
@@ -113,6 +137,9 @@ class StripeGateway:
         stripe_type = STRIPE_METHOD_TYPES.get(method)
         if stripe_type is None:
             raise GatewayError(f'{method} cannot be paid through the gateway.', status=422)
+        # Stripe now takes the methods from the Dashboard (dynamic payment methods); hide the other two we offer so
+        # the page opens on what the customer chose in the app.
+        others = [t for t in STRIPE_METHOD_TYPES.values() if t != stripe_type]
         items = [{
             'quantity': item['quantity'],
             'price_data': {
@@ -123,7 +150,7 @@ class StripeGateway:
         } for item in line_items]
         return self._call('POST', '/checkout/sessions', {
             'mode': 'payment',
-            'payment_method_types': [stripe_type],
+            'excluded_payment_method_types': others,
             'line_items': items,
             'success_url': success_url,
             'cancel_url': cancel_url,

@@ -65,8 +65,11 @@ class FakeGateway:
         return {'id': 're_test'}
 
     # --- test controls
-    def pay(self, gid: str) -> None:
-        self.sessions[gid].update(status='complete', payment_status='paid')
+    def pay(self, gid: str, used: dict | None = None) -> None:
+        update: dict = {'status': 'complete', 'payment_status': 'paid'}
+        if used is not None:  # what the customer really paid with on Stripe's page
+            update['payment_intent'] = {'id': self.sessions[gid]['payment_intent'], 'payment_method': used}
+        self.sessions[gid].update(update)
 
     def expire(self, gid: str) -> None:
         self.sessions[gid]['status'] = 'expired'
@@ -241,6 +244,38 @@ def test_paid_session_becomes_an_order_with_the_gateway_reference(gclient, gw_se
     assert _stock_now(gw_settings) == 3
     again = gclient.get(f'/api/payments/sessions/{sid}', headers=_h(t)).json()
     assert again['orderId'] == done['orderId'] and _orders_total(gclient, t) == 1  # polling twice adds nothing
+
+
+def test_the_bank_stripe_reports_is_recorded(gclient, gw_settings, fake):
+    _stock(gw_settings)
+    t = _customer(gclient)
+    _add(gclient, t)
+    sid = _start(gclient, t).json()['id']
+    fake.pay('cs_test_1', used={'type': 'fpx', 'fpx': {'bank': 'hong_leong_bank'}})
+    order_id = gclient.get(f'/api/payments/sessions/{sid}', headers=_h(t)).json()['orderId']
+    order = gclient.get(f'/api/orders/{order_id}', headers=_h(t)).json()
+    assert order['paymentMethod'] == 'fpx' and order['paymentProvider'] == 'hongleong'
+
+
+def test_a_different_method_on_stripes_page_is_recorded_as_used(gclient, gw_settings, fake):
+    _stock(gw_settings)
+    t = _customer(gclient)
+    _add(gclient, t)
+    sid = _start(gclient, t, method='fpx').json()['id']
+    fake.pay('cs_test_1', used={'type': 'grabpay'})
+    order_id = gclient.get(f'/api/payments/sessions/{sid}', headers=_h(t)).json()['orderId']
+    order = gclient.get(f'/api/orders/{order_id}', headers=_h(t)).json()
+    assert order['paymentMethod'] == 'ewallet' and order['paymentProvider'] == 'grabpay'
+    assert order['payments'][0]['reference'] == 'pi_test_1'
+
+
+def test_method_used_mapping():
+    assert gw.method_used({'type': 'fpx', 'fpx': {'bank': 'maybank2u'}}) == ('fpx', 'maybank2u')
+    assert gw.method_used({'type': 'fpx', 'fpx': {'bank': 'unknown_bank'}}) == ('fpx', None)
+    assert gw.method_used({'type': 'grabpay'}) == ('ewallet', 'grabpay')
+    assert gw.method_used({'type': 'card'}) == ('card', None)
+    assert gw.method_used({'type': 'link'}) == ('card', None)
+    assert gw.method_used('pm_123') is None and gw.method_used(None) is None
 
 
 def test_unpaid_expired_session_is_closed_without_an_order(gclient, gw_settings, fake):
@@ -471,7 +506,9 @@ def test_create_checkout_session_request_shape():
     assert out['id'] == 'cs_test_9' and seen['method'] == 'POST'
     assert seen['url'] == 'https://api.stripe.com/v1/checkout/sessions'
     assert seen['headers']['Authorization'] == f'Bearer {TEST_KEY}' and seen['headers']['Idempotency-Key'] == 'create-PS-1'
-    assert 'payment_method_types%5B0%5D=grabpay' in seen['body'] and 'currency%5D=myr' in seen['body']
+    assert 'payment_method_types' not in seen['body'].replace('excluded_payment_method_types', '')
+    assert 'excluded_payment_method_types%5B0%5D=fpx' in seen['body']
+    assert 'excluded_payment_method_types%5B1%5D=card' in seen['body'] and 'currency%5D=myr' in seen['body']
     assert 'unit_amount%5D=3800' in seen['body'] and 'client_reference_id=PS-1' in seen['body']
 
 

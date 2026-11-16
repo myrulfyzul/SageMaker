@@ -18,7 +18,8 @@ from fastapi import Request
 from app.config import Settings
 from app.errors import AppError, ValidationFailed
 from app.modules.payments.gateway import (GATEWAY_EWALLET, STRIPE_METHOD_TYPES, GatewayError,  # noqa: F401 (re-exported)
-                                          StripeGateway, WebhookSignatureError, sign_webhook, verify_webhook)
+                                          StripeGateway, WebhookSignatureError, method_used, sign_webhook,
+                                          verify_webhook)
 from app.modules.payments.schemas import (FPX_MAX_SEN, FPX_MIN_SEN, PAYMENT_METHODS, PAYMENT_OUTCOMES,  # noqa: F401 (re-exported)
                                          Method, PaymentRequest, SimulatedOutcome, provider_problem)
 from app.time_utils import utc_now_iso
