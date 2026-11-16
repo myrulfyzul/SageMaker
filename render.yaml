@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: sagemaker-api
+    runtime: python
+    plan: free
+    buildCommand: pip install -r backend/requirements.txt
+    # The free disk is temporary, so the database is rebuilt on each start:
+    # migrate, seed (exit code 2 = already seeded, which is fine), then serve.
+    startCommand: >-
+      python -m backend.migrate up &&
+      (python -m backend.seed || true) &&
+      python -m uvicorn app.main:application --app-dir backend --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: DATABASE_PATH
+        value: /tmp/sagemaker.sqlite3
+      - key: MEDIA_DIR
+        value: /tmp/media
+      - key: DEMO_MODE
+        value: "1"

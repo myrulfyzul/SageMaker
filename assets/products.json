@@ -1,0 +1,38 @@
+[
+  {
+    "id": "fishing",
+    "name": "Fishing Mini Busy Book",
+    "category": "Kids & Toys",
+    "description": "Interactive fabric learning book, handcrafted for little learners.",
+    "imageUrl": "https://shop.sagemaker.asia/cdn/shop/files/MG_0079.jpg?v=1739780820&width=533",
+    "productUrl": "https://shop.sagemaker.asia/products/fishing-mini-busy-book",
+    "demoPriceSen": 3500
+  },
+  {
+    "id": "hikayat",
+    "name": "Hikayat Hang Tuah Busy Storybook",
+    "category": "Kids & Toys",
+    "description": "A tactile storybook inspired by Malay cultural heritage.",
+    "imageUrl": "https://shop.sagemaker.asia/cdn/shop/files/MG_0022.jpg?v=1739781478&width=533",
+    "productUrl": "https://shop.sagemaker.asia/products/hikayat-hang-tuah-busy-storybook",
+    "demoPriceSen": 4900
+  },
+  {
+    "id": "pouch",
+    "name": "Jendela Kids Pouch",
+    "category": "Accessories",
+    "description": "A characterful handcrafted pouch from the Sagemaker collection.",
+    "imageUrl": "https://shop.sagemaker.asia/cdn/shop/files/Generated_Image_September_18_2025_-_7_47PM_1e883b5c-0a7f-4848-a471-38883ac04eef.png?v=1758200662&width=533",
+    "productUrl": "https://shop.sagemaker.asia/products/jendela-pouch",
+    "demoPriceSen": 2500
+  },
+  {
+    "id": "jendela",
+    "name": "Jendela Heritage Totebag",
+    "category": "Bags",
+    "description": "A heritage-inspired tote combining practical design and handmade details.",
+    "imageUrl": "https://shop.sagemaker.asia/cdn/shop/files/GeneratedImageSeptember16_2025-12_46PMcopy.png?v=1757999442&width=533",
+    "productUrl": "https://shop.sagemaker.asia/products/ih-totebag-with-coaster",
+    "demoPriceSen": 4200
+  }
+]

@@ -1,0 +1,29 @@
+name: sagemaker_flutter
+description: Independent Sagemaker-inspired all-in-one DEMO shop with Python API.
+publish_to: none
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.6.0 <4.0.0'
+
+dependencies:
+  fl_chart: ^1.3.1
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^3.5.0
+  flutter_secure_storage: ^11.2.0
+  go_router: ^18.1.4
+  http: ^1.2.2
+  image_picker: ^1.2.4
+  shared_preferences: ^2.3.2
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/products.json
+dev_dependencies:
+  flutter_lints: ^6.0.0
+  flutter_test:
+    sdk: flutter
+  glados: ^1.1.7
+  mocktail: ^1.0.5
