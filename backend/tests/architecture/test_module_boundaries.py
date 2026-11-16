@@ -29,7 +29,7 @@ OWNED_TABLES: dict[str, set[str]] = {
     'cart': {'cart_lines'},
     'checkout': set(),  # orchestration only, owns no tables
     'orders': {'orders', 'order_lines', 'order_history'},
-    'payments': {'payments'},
+    'payments': {'payments', 'payment_sessions'},
     'artisans': {'artisans'},
     'production': {'production_jobs', 'production_progress'},
     'custom_orders': {'custom_orders', 'custom_order_images'},

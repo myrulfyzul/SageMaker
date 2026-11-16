@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../app/theme.dart';
 import '../../../core/money.dart';
 import '../data/malaysia_payments.dart';
+import '../data/payment_gateway.dart';
 
 /// Payment channel picker with the FPX bank list and e-wallet choice.
 /// No credential is entered here; the gateway screen handles approval.
@@ -13,6 +14,8 @@ class PaymentChooser extends StatelessWidget {
     required this.providerId,
     required this.onChanged,
     this.amountSen,
+    this.config,
+    this.codOnly = false,
   });
 
   final PaymentChannel? channel;
@@ -21,6 +24,47 @@ class PaymentChooser extends StatelessWidget {
 
   /// Order total; FPX is disabled outside its RM 1 to RM 30,000 limit.
   final int? amountSen;
+
+  /// How the server takes payments. With the hosted gateway the bank or
+  /// wallet is chosen on its page, so only the channel is picked here.
+  final PaymentConfig? config;
+
+  /// Only cash on delivery (a failed order cannot be re-paid online here).
+  final bool codOnly;
+
+  bool get _hosted => config?.isHosted ?? false;
+
+  List<PaymentChannel> get _channels {
+    if (codOnly) return const [PaymentChannel.cod];
+    if (_hosted) {
+      return [
+        for (final c in PaymentChannel.values)
+          if (c != PaymentChannel.duitnow) c,
+      ];
+    }
+    return PaymentChannel.values;
+  }
+
+  /// Title and subtitle; the hosted gateway offers GrabPay only and shows
+  /// its own bank list.
+  (String, String) _text(PaymentChannel c) {
+    if (!_hosted) return (c.label, c.subtitle);
+    return switch (c) {
+      PaymentChannel.fpx => (
+          c.label,
+          'You choose your bank on the secure payment page'
+        ),
+      PaymentChannel.ewallet => (
+          'GrabPay',
+          'Pay with your GrabPay wallet on the secure page'
+        ),
+      PaymentChannel.card => (
+          c.label,
+          'Enter your card details on the secure payment page'
+        ),
+      _ => (c.label, c.subtitle),
+    };
+  }
 
   bool _fpxAllowed() =>
       amountSen == null || (amountSen! >= fpxMinSen && amountSen! <= fpxMaxSen);
@@ -36,14 +80,22 @@ class PaymentChooser extends StatelessWidget {
         Text('All payments are processed in Malaysian Ringgit (MYR).',
             style: Theme.of(context).textTheme.bodySmall),
         const SizedBox(height: 16),
-        for (final c in PaymentChannel.values) ...[
+        for (final c in _channels) ...[
           _ChannelCard(
             channel: c,
+            title: _text(c).$1,
+            subtitle: _text(c).$2,
             selected: channel == c,
             enabled: c != PaymentChannel.fpx || _fpxAllowed(),
             disabledNote: 'FPX accepts RM 1.00 to RM 30,000.00 per payment.',
-            onTap: () => onChanged(c, channel == c ? providerId : null),
-            child: c.needsProvider && channel == c
+            onTap: () => onChanged(
+                c,
+                _hosted
+                    ? (c == PaymentChannel.ewallet
+                        ? config?.ewalletProvider
+                        : null)
+                    : (channel == c ? providerId : null)),
+            child: !_hosted && c.needsProvider && channel == c
                 ? _ProviderGrid(
                     providers: providersFor(c),
                     selectedId: providerId,
@@ -59,7 +111,9 @@ class PaymentChooser extends StatelessWidget {
           const SizedBox(width: 6),
           Expanded(
             child: Text(
-                'Secured checkout. Card and banking details are never stored by SageMaker.',
+                _hosted
+                    ? "You'll pay on Stripe's secure page (sandbox: no real money moves). SageMaker never sees your card or bank details."
+                    : 'Secured checkout. Card and banking details are never stored by SageMaker.',
                 style: Theme.of(context).textTheme.bodySmall),
           ),
         ]),
@@ -71,6 +125,8 @@ class PaymentChooser extends StatelessWidget {
 class _ChannelCard extends StatelessWidget {
   const _ChannelCard({
     required this.channel,
+    required this.title,
+    required this.subtitle,
     required this.selected,
     required this.enabled,
     required this.disabledNote,
@@ -79,6 +135,8 @@ class _ChannelCard extends StatelessWidget {
   });
 
   final PaymentChannel channel;
+  final String title;
+  final String subtitle;
   final bool selected;
   final bool enabled;
   final String disabledNote;
@@ -128,10 +186,9 @@ class _ChannelCard extends StatelessWidget {
                     child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(channel.label,
-                              style: theme.textTheme.titleMedium),
+                          Text(title, style: theme.textTheme.titleMedium),
                           const SizedBox(height: 2),
-                          Text(enabled ? channel.subtitle : disabledNote,
+                          Text(enabled ? subtitle : disabledNote,
                               style: theme.textTheme.bodySmall),
                         ]),
                   ),

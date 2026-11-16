@@ -30,6 +30,24 @@ class EmptyCart(AppError):
     message = 'Your cart is empty'
 
 
+class CartChanged(AppError):
+    status = 409
+    code = 'cart_changed'
+    message = 'Your cart changed while the payment was in progress'
+
+
+def ensure_cart_ready(cart: dict[str, Any]) -> list[dict[str, Any]]:
+    """The cart's lines, or EmptyCart / InsufficientStock (409 with per-item details)."""
+    lines = cart['lines']
+    if not lines:
+        raise EmptyCart()
+    unavailable = [{'productId': ln['productId'], 'variationId': ln['variationId'],
+                    'requested': ln['quantity'], 'available': 0} for ln in lines if not ln['available']]
+    if unavailable:
+        raise inventory_api.InsufficientStock(details=unavailable)
+    return lines
+
+
 def _outcome_mapping(body: CheckoutIn) -> tuple[str, str, str, bool]:
     if body.method == 'cod':
         return _COD
@@ -42,8 +60,12 @@ def _with_payments(conn: sqlite3.Connection, order: dict[str, Any]) -> dict[str,
     return {**order, 'payments': payments_api.list_for_order(conn, order['id'])}
 
 
-def place_order(conn: sqlite3.Connection, user_id: int, body: CheckoutIn) -> tuple[dict[str, Any], bool]:
-    """Returns `(order, created)`; `created` is False for an idempotent repeat (HTTP 200, no writes)."""
+def place_order(conn: sqlite3.Connection, user_id: int, body: CheckoutIn, *, expected_total_sen: int | None = None,
+                reference: str | None = None) -> tuple[dict[str, Any], bool]:
+    """Returns `(order, created)`; `created` is False for an idempotent repeat (HTTP 200, no writes).
+
+    A hosted-gateway payment passes `expected_total_sen` (what the customer actually paid; CartChanged when the
+    cart no longer adds up to it) and `reference` (the gateway's charge id, kept on the payment record)."""
     key = validate_idempotency_key(body.idempotency_key)
     delivery = validate_delivery(body.delivery)
     payment_status, fulfilment, record_outcome, restore = _outcome_mapping(body)
@@ -55,13 +77,9 @@ def place_order(conn: sqlite3.Connection, user_id: int, body: CheckoutIn) -> tup
             return _with_payments(conn, existing), False
 
         cart = cart_api.load_lines(conn, user_id)
-        lines = cart['lines']
-        if not lines:
-            raise EmptyCart()
-        unavailable = [{'productId': ln['productId'], 'variationId': ln['variationId'],
-                        'requested': ln['quantity'], 'available': 0} for ln in lines if not ln['available']]
-        if unavailable:
-            raise inventory_api.InsufficientStock(details=unavailable)
+        lines = ensure_cart_ready(cart)
+        if expected_total_sen is not None and cart['grandTotalSen'] != expected_total_sen:
+            raise CartChanged()
 
         new_order = orders_api.NewOrder(
             user_id=user_id, idempotency_key=key, customer_name=delivery['name'], email=delivery['email'],
@@ -80,7 +98,8 @@ def place_order(conn: sqlite3.Connection, user_id: int, body: CheckoutIn) -> tup
         inventory_api.reserve_for_order(
             conn, [{'product_id': ln['productId'], 'variation_id': ln['variationId'], 'quantity': ln['quantity']}
                    for ln in lines], order_id, user_id)
-        payments_api.record(conn, order_id, body.method, record_outcome, order['totalSen'], provider=body.provider)
+        payments_api.record(conn, order_id, body.method, record_outcome, order['totalSen'], provider=body.provider,
+                            reference=reference)
         if body.provider:
             orders_api.update_fields(conn, order_id, payment_provider=body.provider)
         if restore:

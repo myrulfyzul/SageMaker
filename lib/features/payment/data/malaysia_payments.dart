@@ -59,56 +59,95 @@ enum PaymentChannel {
 
 /// FPX B2C retail banks.
 const fpxBanks = <PaymentProvider>[
-  PaymentProvider(id: 'maybank2u', name: 'Maybank2u', short: 'MB',
-      color: Color(0xFFFFC72C), onColor: Color(0xFF1D1D1B)),
-  PaymentProvider(id: 'cimb', name: 'CIMB Clicks', short: 'CI',
-      color: Color(0xFFEC1C24)),
-  PaymentProvider(id: 'publicbank', name: 'Public Bank', short: 'PB',
+  PaymentProvider(
+      id: 'maybank2u',
+      name: 'Maybank2u',
+      short: 'MB',
+      color: Color(0xFFFFC72C),
+      onColor: Color(0xFF1D1D1B)),
+  PaymentProvider(
+      id: 'cimb', name: 'CIMB Clicks', short: 'CI', color: Color(0xFFEC1C24)),
+  PaymentProvider(
+      id: 'publicbank',
+      name: 'Public Bank',
+      short: 'PB',
       color: Color(0xFFC8102E)),
-  PaymentProvider(id: 'rhb', name: 'RHB Now', short: 'RHB',
-      color: Color(0xFF005BAA)),
-  PaymentProvider(id: 'hongleong', name: 'Hong Leong Connect', short: 'HL',
+  PaymentProvider(
+      id: 'rhb', name: 'RHB Now', short: 'RHB', color: Color(0xFF005BAA)),
+  PaymentProvider(
+      id: 'hongleong',
+      name: 'Hong Leong Connect',
+      short: 'HL',
       color: Color(0xFF004B8D)),
-  PaymentProvider(id: 'ambank', name: 'AmOnline', short: 'AM',
-      color: Color(0xFFE31837)),
-  PaymentProvider(id: 'bankislam', name: 'Bank Islam', short: 'BI',
+  PaymentProvider(
+      id: 'ambank', name: 'AmOnline', short: 'AM', color: Color(0xFFE31837)),
+  PaymentProvider(
+      id: 'bankislam',
+      name: 'Bank Islam',
+      short: 'BI',
       color: Color(0xFFB0005A)),
-  PaymentProvider(id: 'bsn', name: 'BSN', short: 'BSN',
-      color: Color(0xFF1B3F94)),
-  PaymentProvider(id: 'bankrakyat', name: 'Bank Rakyat', short: 'BR',
+  PaymentProvider(
+      id: 'bsn', name: 'BSN', short: 'BSN', color: Color(0xFF1B3F94)),
+  PaymentProvider(
+      id: 'bankrakyat',
+      name: 'Bank Rakyat',
+      short: 'BR',
       color: Color(0xFF00529B)),
-  PaymentProvider(id: 'muamalat', name: 'Bank Muamalat', short: 'BM',
+  PaymentProvider(
+      id: 'muamalat',
+      name: 'Bank Muamalat',
+      short: 'BM',
       color: Color(0xFF6D2077)),
-  PaymentProvider(id: 'affin', name: 'Affin Bank', short: 'AF',
-      color: Color(0xFF003F7D)),
-  PaymentProvider(id: 'alliance', name: 'Alliance Bank', short: 'AL',
+  PaymentProvider(
+      id: 'affin', name: 'Affin Bank', short: 'AF', color: Color(0xFF003F7D)),
+  PaymentProvider(
+      id: 'alliance',
+      name: 'Alliance Bank',
+      short: 'AL',
       color: Color(0xFF00205B)),
-  PaymentProvider(id: 'agrobank', name: 'Agrobank', short: 'AG',
-      color: Color(0xFF00843D)),
-  PaymentProvider(id: 'hsbc', name: 'HSBC', short: 'HS',
-      color: Color(0xFFDB0011)),
-  PaymentProvider(id: 'ocbc', name: 'OCBC', short: 'OC',
-      color: Color(0xFFD71920)),
-  PaymentProvider(id: 'sc', name: 'Standard Chartered', short: 'SC',
+  PaymentProvider(
+      id: 'agrobank', name: 'Agrobank', short: 'AG', color: Color(0xFF00843D)),
+  PaymentProvider(
+      id: 'hsbc', name: 'HSBC', short: 'HS', color: Color(0xFFDB0011)),
+  PaymentProvider(
+      id: 'ocbc', name: 'OCBC', short: 'OC', color: Color(0xFFD71920)),
+  PaymentProvider(
+      id: 'sc',
+      name: 'Standard Chartered',
+      short: 'SC',
       color: Color(0xFF0072AA)),
-  PaymentProvider(id: 'uob', name: 'UOB', short: 'UOB',
-      color: Color(0xFF0B3B8C)),
-  PaymentProvider(id: 'kfh', name: 'KFH', short: 'KF',
-      color: Color(0xFF00703C), online: false),
+  PaymentProvider(
+      id: 'uob', name: 'UOB', short: 'UOB', color: Color(0xFF0B3B8C)),
+  PaymentProvider(
+      id: 'kfh',
+      name: 'KFH',
+      short: 'KF',
+      color: Color(0xFF00703C),
+      online: false),
 ];
 
 /// Popular Malaysian e-wallets.
 const eWallets = <PaymentProvider>[
-  PaymentProvider(id: 'tng', name: "Touch 'n Go eWallet", short: 'TnG',
+  PaymentProvider(
+      id: 'tng',
+      name: "Touch 'n Go eWallet",
+      short: 'TnG',
       color: Color(0xFF005ABB)),
-  PaymentProvider(id: 'grabpay', name: 'GrabPay', short: 'GP',
-      color: Color(0xFF00B14F)),
-  PaymentProvider(id: 'boost', name: 'Boost', short: 'BO',
-      color: Color(0xFFEE2E24)),
-  PaymentProvider(id: 'shopeepay', name: 'ShopeePay', short: 'SP',
+  PaymentProvider(
+      id: 'grabpay', name: 'GrabPay', short: 'GP', color: Color(0xFF00B14F)),
+  PaymentProvider(
+      id: 'boost', name: 'Boost', short: 'BO', color: Color(0xFFEE2E24)),
+  PaymentProvider(
+      id: 'shopeepay',
+      name: 'ShopeePay',
+      short: 'SP',
       color: Color(0xFFEE4D2D)),
-  PaymentProvider(id: 'mae', name: 'MAE by Maybank', short: 'MAE',
-      color: Color(0xFFFFC72C), onColor: Color(0xFF1D1D1B)),
+  PaymentProvider(
+      id: 'mae',
+      name: 'MAE by Maybank',
+      short: 'MAE',
+      color: Color(0xFFFFC72C),
+      onColor: Color(0xFF1D1D1B)),
 ];
 
 /// DuitNow QR, shown as one provider so the gateway can brand its screen.

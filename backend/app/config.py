@@ -69,6 +69,28 @@ def _parse_timezone(raw: Optional[str]) -> str:
     return name
 
 
+def _parse_stripe_key(raw: Optional[str]) -> str:
+    """Sandbox key only: a `sk_live_` key is refused so this prototype can never charge real money."""
+    key = (raw or '').strip()
+    if not key:
+        return ''
+    if key.startswith('sk_live_') or key.startswith('rk_live_'):
+        raise ConfigError('STRIPE_SECRET_KEY', 'live keys are not accepted; use a sandbox key (sk_test_...)')
+    if not (key.startswith('sk_test_') or key.startswith('rk_test_')):
+        raise ConfigError('STRIPE_SECRET_KEY', 'must be a Stripe sandbox secret key starting with sk_test_')
+    return key
+
+
+def _parse_public_url(raw: Optional[str]) -> str:
+    value = (raw or '').strip().rstrip('/')
+    if not value:
+        return ''
+    parsed = urlparse(value)
+    if parsed.scheme not in ('http', 'https') or not parsed.hostname or parsed.path not in ('', '/'):
+        raise ConfigError('PUBLIC_BASE_URL', f'"{value}" is not an absolute http(s) origin')
+    return value
+
+
 @dataclass(frozen=True)
 class Settings:
     database_path: Path
@@ -79,6 +101,16 @@ class Settings:
     app_timezone: str = DEFAULT_TIMEZONE
     # Legacy admin key (optional; empty means the legacy admin endpoint always refuses).
     legacy_admin_key: str = ''
+    # Stripe sandbox (empty = simulated prototype gateway). The webhook secret is optional: without it the app
+    # confirms payments by asking Stripe directly while it polls.
+    stripe_secret_key: str = ''
+    stripe_webhook_secret: str = ''
+    # Public origin of this API, used for Stripe's return URLs (Render sets RENDER_EXTERNAL_URL itself).
+    public_base_url: str = ''
+
+    @property
+    def gateway_enabled(self) -> bool:
+        return bool(self.stripe_secret_key)
 
     @classmethod
     def from_env(cls, environ: Optional[Mapping[str, str]] = None) -> 'Settings':
@@ -100,4 +132,7 @@ class Settings:
             media_dir=_parse_media_dir(env.get('MEDIA_DIR'), database_path),
             app_timezone=_parse_timezone(env.get('APP_TIMEZONE')),
             legacy_admin_key=env.get('SAGEMAKER_ADMIN_KEY', ''),
+            stripe_secret_key=_parse_stripe_key(env.get('STRIPE_SECRET_KEY')),
+            stripe_webhook_secret=(env.get('STRIPE_WEBHOOK_SECRET') or '').strip(),
+            public_base_url=_parse_public_url(env.get('PUBLIC_BASE_URL') or env.get('RENDER_EXTERNAL_URL')),
         )

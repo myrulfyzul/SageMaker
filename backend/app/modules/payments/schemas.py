@@ -31,6 +31,11 @@ def provider_problem(method: str, provider: Optional[str]) -> Optional[str]:
     return None
 
 
+# FPX B2C limits in sen (RM 1.00 to RM 30,000.00).
+FPX_MIN_SEN = 100
+FPX_MAX_SEN = 3_000_000
+
+
 class PaymentRequest(BaseModel):
     """Method and simulated outcome only; any extra field (e.g. a card number) is rejected with 422."""
     model_config = ConfigDict(extra='forbid')
@@ -47,5 +52,6 @@ class PaymentOut(BaseModel):
     outcome: str
     amountSen: int
     provider: Optional[str] = None
+    reference: Optional[str] = None
     isDemo: bool
     createdAt: str

@@ -12,6 +12,7 @@ import '../../checkout/data/checkout_models.dart';
 import '../../checkout/data/checkout_repository.dart';
 import '../../checkout/state/checkout_flow.dart' show couldNotProcessMessage;
 import '../data/malaysia_payments.dart';
+import '../data/payment_gateway.dart';
 import 'payment_chooser.dart';
 import 'payment_gateway_screen.dart';
 
@@ -48,10 +49,9 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
       _shortages = const [];
     });
     try {
-      await ref
-          .read(checkoutRepositoryProvider)
-          .retryPayment(widget.orderId, _channel!.method, outcome,
-              provider: _channel!.providerFor(_providerId));
+      await ref.read(checkoutRepositoryProvider).retryPayment(
+          widget.orderId, _channel!.method, outcome,
+          provider: _channel!.providerFor(_providerId));
       ref.invalidate(placedOrderProvider(widget.orderId));
       if (mounted) context.go('/confirmation/${widget.orderId}');
     } on ConflictFailure catch (e) {
@@ -79,6 +79,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   @override
   Widget build(BuildContext context) {
     final order = ref.watch(placedOrderProvider(widget.orderId));
+    final config = ref.watch(paymentConfigProvider).value;
     return Scaffold(
       appBar: AppBar(title: const Text('Payment')),
       body: order.when(
@@ -129,6 +130,10 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
               channel: _channel,
               providerId: _providerId,
               amountSen: o.totalSen,
+              config: config,
+              // With the real gateway a failed order cannot be re-paid with a
+              // simulated payment; place it again from the cart instead.
+              codOnly: config?.isHosted ?? false,
               onChanged: (c, p) => setState(() {
                 _channel = c;
                 _providerId = p;

@@ -81,6 +81,10 @@ RULES: list[tuple[str, object]] = [
     (r'^[A-Z]+ /api/staff/', STAFF),
     # Customer-only: profile, addresses, favourites, cart, checkout, own orders/payments, own custom orders.
     (r'^[A-Z]+ /api/(me|favourites|cart|checkout|custom-orders)', CUSTOMER),
+    # Hosted-gateway payments: the config is public; starting, reading and cancelling a payment is customer-only.
+    # (The Stripe webhook and return page are not in the OpenAPI document; the webhook is signature-checked.)
+    (r'^GET /api/payments/config$', OPEN),
+    (r'^(GET|POST) /api/payments/sessions(/\{session_id\}(/cancel)?)?$', CUSTOMER),
     (r'^(GET|POST) /api/orders(/\{order_id\}(/payments)?)?$', CUSTOMER),
 ]
 

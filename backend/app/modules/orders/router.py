@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Annotated, Any, Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 
 from app.modules.auth.deps import ConnDep, require_customer, require_staff
 from app.modules.auth.api import SessionInfo
@@ -35,7 +35,9 @@ def get_my_order(order_id: str, session: CustomerDep, conn: ConnDep) -> dict[str
 
 @router.post('/{order_id}/payments', dependencies=[Depends(payments_api.require_demo_mode)],
              summary='Retry a failed payment (simulated)')
-def retry_payment(order_id: str, body: payments_api.PaymentRequest, session: CustomerDep, conn: ConnDep) -> dict[str, Any]:
+def retry_payment(order_id: str, body: payments_api.PaymentRequest, request: Request, session: CustomerDep,
+                  conn: ConnDep) -> dict[str, Any]:
+    payments_api.reject_simulated_when_gateway(request.app.state.settings, body.method)
     return service.retry_payment(conn, session.user_id, order_id, body)
 
 

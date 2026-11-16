@@ -20,6 +20,15 @@ services:
         value: /tmp/media
       - key: DEMO_MODE
         value: "1"
+      # Where Stripe sends the customer back after paying.
+      - key: PUBLIC_BASE_URL
+        value: https://sagemaker-api.onrender.com
+      # Real payments in Stripe's sandbox. Fill in on the Render dashboard (Environment tab); leave
+      # STRIPE_SECRET_KEY empty to keep the simulated prototype gateway. See README section 0.2.
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
       # Lets the app run in Chrome on your PC (flutter run -d chrome --web-port=5353).
       - key: ALLOWED_ORIGINS
         value: http://localhost:5353,http://127.0.0.1:5353

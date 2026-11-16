@@ -45,6 +45,14 @@ class CheckoutIn(_Model):
     provider: Optional[str] = None
 
 
+class GatewayStartIn(_Model):
+    """Start a hosted-gateway payment for the current cart. Only methods the gateway can take."""
+    idempotency_key: Any = None
+    delivery: DeliveryIn
+    method: Literal['fpx', 'ewallet', 'card']
+    provider: Optional[str] = None
+
+
 def _text(value: Any) -> Optional[str]:
     return value.strip() if isinstance(value, str) else None
 

@@ -6,6 +6,7 @@ import '../../../core/network/app_failure.dart';
 import '../../../core/validators.dart';
 import '../../auth/state/session_provider.dart';
 import '../../payment/data/malaysia_payments.dart';
+import '../../payment/data/payment_gateway.dart';
 import '../data/checkout_models.dart';
 import '../data/checkout_repository.dart';
 
@@ -59,6 +60,7 @@ class CheckoutState {
     this.shortages = const [],
     this.prefilled = false,
     this.formVersion = 0,
+    this.gateway = false,
   });
 
   final int step;
@@ -85,9 +87,14 @@ class CheckoutState {
   /// Bumped when the form is replaced from outside (address prefill).
   final int formVersion;
 
+  /// The server takes online payments on a hosted page, so no bank or wallet
+  /// is picked in the app.
+  final bool gateway;
+
   /// A method is chosen, and a bank or wallet when the channel needs one.
   bool get paymentChosen =>
-      method != null && (channel?.needsProvider != true || providerId != null);
+      method != null &&
+      (gateway || channel?.needsProvider != true || providerId != null);
 
   CheckoutState copyWith({
     int? step,
@@ -106,6 +113,8 @@ class CheckoutState {
     List<StockShortage>? shortages,
     bool? prefilled,
     int? formVersion,
+    bool? gateway,
+    bool clearIdempotencyKey = false,
   }) =>
       CheckoutState(
         step: step ?? this.step,
@@ -115,12 +124,15 @@ class CheckoutState {
         channel: channel ?? this.channel,
         providerId: clearProvider ? null : (providerId ?? this.providerId),
         outcome: clearOutcome ? null : (outcome ?? this.outcome),
-        idempotencyKey: idempotencyKey ?? this.idempotencyKey,
+        idempotencyKey: clearIdempotencyKey
+            ? null
+            : (idempotencyKey ?? this.idempotencyKey),
         submitting: submitting ?? this.submitting,
         error: clearError ? null : (error ?? this.error),
         shortages: shortages ?? this.shortages,
         prefilled: prefilled ?? this.prefilled,
         formVersion: formVersion ?? this.formVersion,
+        gateway: gateway ?? this.gateway,
       );
 }
 
@@ -205,7 +217,8 @@ class CheckoutFlow extends Notifier<CheckoutState> {
       return null;
     }
     if (methodNeedsOutcome(state.method!) && state.outcome == null) {
-      state = state.copyWith(error: 'Complete the payment to place your order.');
+      state =
+          state.copyWith(error: 'Complete the payment to place your order.');
       return null;
     }
     final key = state.idempotencyKey ?? newIdempotencyKey();
@@ -225,7 +238,16 @@ class CheckoutFlow extends Notifier<CheckoutState> {
       ref.invalidate(checkoutCartProvider);
       state = state.copyWith(submitting: false, clearError: true);
       return order.id;
-    } on ValidationFailure catch (e) {
+    } catch (e) {
+      _fail(e);
+    }
+    return null;
+  }
+
+  /// Turns a failed request into form errors, stock shortages or a message,
+  /// keeping what the customer typed.
+  void _fail(Object e) {
+    if (e is ValidationFailure) {
       final fields = <String, String>{};
       e.fields.forEach((k, v) => fields[k.replaceFirst('delivery.', '')] = v);
       final deliveryErrors = {
@@ -245,7 +267,7 @@ class CheckoutFlow extends Notifier<CheckoutState> {
           errors: deliveryErrors,
           step: deliveryErrors.isNotEmpty ? 1 : state.step,
           error: deliveryErrors.isEmpty ? e.message : null);
-    } on ConflictFailure catch (e) {
+    } else if (e is ConflictFailure) {
       final shortages = [
         for (final d in e.details)
           if (d is Map) StockShortage.fromJson(Map<String, dynamic>.from(d)),
@@ -256,15 +278,56 @@ class CheckoutFlow extends Notifier<CheckoutState> {
           error: shortages.isEmpty
               ? e.message
               : 'Some items are short on stock. Update your cart and try again.');
-    } on ServerFailure catch (e) {
+    } else if (e is ServerFailure) {
       // 4xx such as an empty cart (400) carries a usable message.
       state = state.copyWith(
           submitting: false,
           error: e.statusCode < 500 ? e.message : couldNotProcessMessage);
-    } on AppFailure {
+    } else {
       state = state.copyWith(submitting: false, error: couldNotProcessMessage);
-    } catch (_) {
-      state = state.copyWith(submitting: false, error: couldNotProcessMessage);
+    }
+  }
+
+  /// Tells the flow whether online payments use the hosted gateway page.
+  void useGateway(bool value) {
+    if (state.gateway != value) state = state.copyWith(gateway: value);
+  }
+
+  /// Forget the idempotency key after an unpaid attempt, so the next try is a
+  /// new payment instead of returning the finished one.
+  void resetAttempt() =>
+      state = state.copyWith(clearIdempotencyKey: true, clearError: true);
+
+  /// Starts a payment on the hosted gateway page for the current cart.
+  /// Returns the pending payment, or null with the error kept in the state.
+  Future<GatewayPayment?> startGatewayPayment() async {
+    if (state.submitting) return null;
+    final errors = validateDelivery(state.delivery);
+    if (errors.isNotEmpty) {
+      state = state.copyWith(errors: errors, step: 1);
+      return null;
+    }
+    if (!state.paymentChosen) {
+      state = state.copyWith(step: 2, error: 'Choose a payment method.');
+      return null;
+    }
+    final key = state.idempotencyKey ?? newIdempotencyKey();
+    state = state.copyWith(
+        idempotencyKey: key,
+        submitting: true,
+        clearError: true,
+        shortages: const []);
+    try {
+      final payment = await ref.read(paymentGatewayRepositoryProvider).start(
+            idempotencyKey: key,
+            delivery: state.delivery,
+            method: state.method!,
+            provider: state.channel?.providerFor(state.providerId),
+          );
+      state = state.copyWith(submitting: false, clearError: true);
+      return payment;
+    } catch (e) {
+      _fail(e);
     }
     return null;
   }

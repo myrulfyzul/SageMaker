@@ -49,6 +49,25 @@ Render's free disk is wiped on every restart. `backend/start.sh` can restore the
 
 Uploaded product images (`MEDIA_DIR`) are not replicated and still reset on restart; product images that point to web URLs are unaffected.
 
+## 0.2 Real payments in Stripe's sandbox (FPX, GrabPay, card)
+
+With a Stripe sandbox key set, **Pay** opens Stripe's hosted payment page (real FPX test bank page, GrabPay and card forms) and the order is created only after Stripe confirms the payment. Without a key the app keeps its simulated prototype gateway. The API refuses `sk_live_` keys, so no real money can move.
+
+**What Stripe covers.** In Malaysia Stripe takes FPX, GrabPay and cards. It does **not** take DuitNow QR, Touch 'n Go, Boost or ShopeePay, so with the real gateway on, the app offers FPX, GrabPay, card and cash on delivery, and hides DuitNow QR and the other wallets. (They stay in the prototype gateway.)
+
+1. Create a free account at https://dashboard.stripe.com/register and choose **Malaysia** as the country. You can stay in **test mode**; no business verification is needed for a sandbox.
+2. Dashboard > **Settings > Payment methods**: make sure **FPX**, **GrabPay** and **Cards** are turned on.
+3. Dashboard > **Developers > API keys**: copy the **Secret key** (`sk_test_...`). Never put it in the app or in Git.
+4. In Render: **sagemaker-api > Environment**, set `STRIPE_SECRET_KEY` to that key and save. Render redeploys. Check `https://sagemaker-api.onrender.com/api/payments/config`: it should now say `"gateway": "stripe"`.
+5. (Optional, faster confirmation) Dashboard > **Developers > Webhooks > Add endpoint**: URL `https://sagemaker-api.onrender.com/api/payments/webhook/stripe`, events `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`, `checkout.session.expired`. Copy its **Signing secret** (`whsec_...`) into Render as `STRIPE_WEBHOOK_SECRET`. Without it, the app confirms payments by asking Stripe while it waits.
+6. Rebuild or reload the app. At checkout choose FPX, GrabPay or card and tap **Pay**.
+
+**Test it.** Cards: `4242 4242 4242 4242` pays, `4000 0000 0000 0002` is declined (any future expiry, any CVC). FPX and GrabPay show Stripe's test authorisation page; choose the success or failure button there.
+
+**How it works.** The app asks the API to start a payment; the API prices the cart itself and creates a Stripe Checkout session; the customer pays on Stripe's page; the API confirms with Stripe (by webhook or by the app's polling) and only then creates the order and takes the stock. If the stock ran out or the cart changed while paying, the payment is refunded automatically. Cash on delivery still works as before. Orders paid this way keep Stripe's PaymentIntent id on the payment record.
+
+**Run it locally.** Set `STRIPE_SECRET_KEY` and `PUBLIC_BASE_URL=http://127.0.0.1:8000` before starting the backend. Stripe cannot reach `127.0.0.1` for webhooks, so locally it relies on the polling (or use the Stripe CLI: `stripe listen --forward-to 127.0.0.1:8000/api/payments/webhook/stripe`).
+
 ## 1. Setup on Windows with VS Code (follow in order)
 
 Run every command from the repository root (`D:\Documents\SAGEMAKER\sagemaker-flutter`) in a VS Code PowerShell terminal.

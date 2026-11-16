@@ -21,6 +21,7 @@ import '../features/custom_orders/ui/custom_orders_screen.dart';
 import '../features/favourites/ui/favourites_screen.dart';
 import '../features/payment/ui/confirmation_screen.dart';
 import '../features/payment/ui/payment_screen.dart';
+import '../features/payment/ui/payment_wait_screen.dart';
 import '../features/home/ui/home_screen.dart';
 import '../features/welcome/ui/welcome_screen.dart';
 import '../features/orders/ui/my_orders_screen.dart';
@@ -68,6 +69,14 @@ List<RouteBase> customerRoutes() => [
       _page('/product/:id',
           (s) => ProductDetailScreen(productId: s.pathParameters['id']!)),
       _page('/checkout', (_) => const CheckoutScreen()),
+      // Declared before '/payment/:orderId' so 'wait' is not read as an order id.
+      GoRoute(
+        path: '/payment/wait/:paymentId',
+        builder: (context, state) => PaymentWaitScreen(
+          paymentId: state.pathParameters['paymentId']!,
+          checkoutUrl: state.extra is String ? state.extra as String : null,
+        ),
+      ),
       _page('/payment/:orderId',
           (s) => PaymentScreen(orderId: s.pathParameters['orderId']!)),
       _page('/confirmation/:orderId',

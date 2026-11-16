@@ -10,6 +10,7 @@ import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/loading_view.dart';
 import '../../../core/widgets/ui_kit.dart';
 import '../../payment/data/malaysia_payments.dart';
+import '../../payment/data/payment_gateway.dart';
 import '../../payment/ui/payment_chooser.dart';
 import '../../payment/ui/payment_gateway_screen.dart';
 import '../data/checkout_models.dart';
@@ -26,6 +27,15 @@ class CheckoutScreen extends ConsumerWidget {
     final flow = ref.watch(checkoutFlowProvider);
     final cart = ref.watch(checkoutCartProvider);
     final address = ref.watch(defaultAddressProvider);
+    final config = ref.watch(paymentConfigProvider);
+    final hosted = config.value?.isHosted ?? false;
+    if (flow.gateway != hosted && config.hasValue) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          ref.read(checkoutFlowProvider.notifier).useGateway(hosted);
+        }
+      });
+    }
 
     // Prefill once from the default address (Req 12.5). A failed address
     // lookup just leaves the form blank.
@@ -40,53 +50,60 @@ class CheckoutScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Checkout')),
-      body: cart.when(
-        loading: () => const LoadingView(),
-        error: (e, _) => ErrorView(
-            message: 'Could not load your cart',
-            onRetry: () => ref.invalidate(checkoutCartProvider)),
-        data: (c) {
-          if (c.isEmpty) {
-            return EmptyView(
-                message: 'Your cart is empty.',
-                actionLabel: 'Browse products',
-                onAction: () => context.go('/shop'));
-          }
-          return Column(children: [
-            _StepHeader(step: flow.step),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                children: [
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 280),
-                    transitionBuilder: (child, a) => FadeTransition(
-                      opacity: a,
-                      child: SlideTransition(
-                        position: Tween(
-                                begin: const Offset(0.06, 0), end: Offset.zero)
-                            .animate(a),
-                        child: child,
-                      ),
-                    ),
-                    child: KeyedSubtree(
-                      key: ValueKey(flow.step),
-                      child: switch (flow.step) {
-                        0 => _CartReview(cart: c),
-                        1 => _DeliveryStep(
-                            key: ValueKey('delivery-${flow.formVersion}')),
-                        2 => _PaymentStep(amountSen: c.grandTotalSen),
-                        _ => _ConfirmStep(cart: c),
-                      },
+      // Wait for the payment config so the steps never change under the customer.
+      body: config.isLoading
+          ? const LoadingView()
+          : cart.when(
+              loading: () => const LoadingView(),
+              error: (e, _) => ErrorView(
+                  message: 'Could not load your cart',
+                  onRetry: () => ref.invalidate(checkoutCartProvider)),
+              data: (c) {
+                if (c.isEmpty) {
+                  return EmptyView(
+                      message: 'Your cart is empty.',
+                      actionLabel: 'Browse products',
+                      onAction: () => context.go('/shop'));
+                }
+                return Column(children: [
+                  _StepHeader(step: flow.step),
+                  Expanded(
+                    child: ListView(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                      children: [
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 280),
+                          transitionBuilder: (child, a) => FadeTransition(
+                            opacity: a,
+                            child: SlideTransition(
+                              position: Tween(
+                                      begin: const Offset(0.06, 0),
+                                      end: Offset.zero)
+                                  .animate(a),
+                              child: child,
+                            ),
+                          ),
+                          child: KeyedSubtree(
+                            key: ValueKey(flow.step),
+                            child: switch (flow.step) {
+                              0 => _CartReview(cart: c),
+                              1 => _DeliveryStep(
+                                  key:
+                                      ValueKey('delivery-${flow.formVersion}')),
+                              2 => _PaymentStep(
+                                  amountSen: c.grandTotalSen,
+                                  config: config.value),
+                              _ => _ConfirmStep(cart: c),
+                            },
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                  _StepButtons(cart: c),
+                ]);
+              },
             ),
-            _StepButtons(cart: c),
-          ]);
-        },
-      ),
     );
   }
 }
@@ -154,6 +171,18 @@ class _StepButtons extends ConsumerWidget {
     final channel = flow.channel ??
         PaymentChannel.values.firstWhere((c) => c.method == flow.method,
             orElse: () => PaymentChannel.cod);
+    if (channel != PaymentChannel.cod && flow.gateway) {
+      // Real gateway: pay on its hosted page, then the server creates the order.
+      final payment = await notifier.startGatewayPayment();
+      if (payment == null || !context.mounted) return;
+      if (payment.isPaid) {
+        ref.invalidate(checkoutCartProvider);
+        context.go('/confirmation/${payment.orderId}');
+      } else {
+        context.push('/payment/wait/${payment.id}', extra: payment.checkoutUrl);
+      }
+      return;
+    }
     if (channel != PaymentChannel.cod) {
       final outcome = await openPaymentGateway(context,
           channel: channel,
@@ -454,8 +483,9 @@ class _DeliveryStepState extends ConsumerState<_DeliveryStep> {
 }
 
 class _PaymentStep extends ConsumerWidget {
-  const _PaymentStep({required this.amountSen});
+  const _PaymentStep({required this.amountSen, this.config});
   final int amountSen;
+  final PaymentConfig? config;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -465,6 +495,7 @@ class _PaymentStep extends ConsumerWidget {
       channel: flow.channel,
       providerId: flow.providerId,
       amountSen: amountSen,
+      config: config,
       onChanged: (c, p) => notifier.chooseChannel(c, providerId: p),
     );
   }

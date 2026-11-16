@@ -27,6 +27,7 @@ from .modules.legacy import router as legacy_router
 from .modules.inventory.router import router as staff_inventory_router
 from .modules.orders.router import router as orders_router, staff_router as staff_orders_router
 from .modules.notifications.router import router as notifications_router
+from .modules.payments.api import StripeGateway
 from .modules.payments.router import router as payments_router
 from .modules.production.router import router as production_router
 from .modules.products.router import home_router as products_home_router
@@ -97,6 +98,8 @@ def create_app(settings: Settings) -> NoSniffASGI:
         lifespan=lifespan,
     )
     app.state.settings = settings
+    # Tests replace this with a fake; None means the simulated prototype gateway is in use.
+    app.state.payment_gateway = StripeGateway(settings.stripe_secret_key) if settings.gateway_enabled else None
     register_handlers(app)
     app.add_middleware(
         CORSMiddleware,
