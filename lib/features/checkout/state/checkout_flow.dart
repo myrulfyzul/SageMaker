@@ -6,6 +6,7 @@ import '../../../core/network/app_failure.dart';
 import '../../../core/validators.dart';
 import '../../auth/state/session_provider.dart';
 import '../../payment/data/malaysia_payments.dart';
+import '../../cart/state/cart_provider.dart';
 import '../../payment/data/payment_gateway.dart';
 import '../data/checkout_models.dart';
 import '../data/checkout_repository.dart';
@@ -235,7 +236,9 @@ class CheckoutFlow extends Notifier<CheckoutState> {
             outcome: state.outcome,
             provider: state.channel?.providerFor(state.providerId),
           );
+      // The server emptied the cart; reload the app's copy (Cart tab, badge).
       ref.invalidate(checkoutCartProvider);
+      ref.invalidate(cartProvider);
       state = state.copyWith(submitting: false, clearError: true);
       return order.id;
     } catch (e) {

@@ -100,12 +100,6 @@ class AboutScreen extends StatelessWidget {
             icon: const Icon(Icons.storefront_outlined),
             label: const Text('Shop the collection'),
           ),
-          const SizedBox(height: 24),
-          Text(
-              'Developed as a university project (TEB2083 / TFB2113 / GEB2083). '
-              'Payments in this version run through a prototype gateway; no real money is charged.',
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodySmall),
         ],
       ),
     );

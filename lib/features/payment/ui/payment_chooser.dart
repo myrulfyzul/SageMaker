@@ -115,7 +115,7 @@ class PaymentChooser extends StatelessWidget {
           Expanded(
             child: Text(
                 _hosted
-                    ? "You'll pay on Stripe's secure page (sandbox: no real money moves). SageMaker never sees your card or bank details."
+                    ? "You'll pay on Stripe's secure payment page. SageMaker never sees your card or bank details."
                     : 'Secured checkout. Card and banking details are never stored by SageMaker.',
                 style: Theme.of(context).textTheme.bodySmall),
           ),

@@ -10,7 +10,9 @@ import 'package:sagemaker_flutter/app/theme.dart';
 import 'package:sagemaker_flutter/core/network/api_client.dart';
 import 'package:sagemaker_flutter/features/auth/data/auth_user.dart';
 import 'package:sagemaker_flutter/features/auth/state/session_provider.dart';
+import 'package:sagemaker_flutter/features/cart/state/cart_provider.dart';
 import 'package:sagemaker_flutter/features/checkout/data/checkout_models.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sagemaker_flutter/features/checkout/state/checkout_flow.dart';
 import 'package:sagemaker_flutter/features/payment/data/malaysia_payments.dart';
 import 'package:sagemaker_flutter/features/payment/data/payment_gateway.dart';
@@ -206,6 +208,60 @@ void main() {
     });
   });
 
+  group('cart after a successful order', () {
+    test('the Cart tab and badge are reloaded and show the cart empty',
+        () async {
+      SharedPreferences.setMockInitialValues({});
+      var ordered = false;
+      final (c, _) = _container((r) async {
+        if (r.url.path == '/api/cart') {
+          return _json(200, {
+            'lines': ordered
+                ? []
+                : [
+                    {
+                      'id': 1,
+                      'productId': 'jendela-totebag-coaster',
+                      'name': 'Jendela Totebag with Coaster',
+                      'quantity': 1,
+                      'unitPriceSen': 6000,
+                      'lineTotalSen': 6000,
+                      'available': true,
+                      'availableQuantity': 40,
+                    }
+                  ],
+            'subtotalSen': ordered ? 0 : 6000,
+            'deliveryFeeSen': ordered ? 0 : 800,
+            'grandTotalSen': ordered ? 0 : 6800,
+          });
+        }
+        if (r.url.path == '/api/checkout') {
+          ordered = true; // the server empties the cart with the order
+          return _json(201, {
+            'id': 'SM-COD0000001',
+            'status': 'placed',
+            'paymentStatus': 'pending_cod',
+            'paymentMethod': 'cod',
+            'totalSen': 6800,
+            'lines': [],
+          });
+        }
+        return _json(200, []);
+      });
+      c.listen(cartCountProvider, (_, __) {});
+      await c.read(cartProvider.future);
+      expect(c.read(cartCountProvider), 1);
+
+      final n = c.read(checkoutFlowProvider.notifier);
+      n.updateDelivery(_delivery);
+      n.chooseChannel(PaymentChannel.cod);
+      expect(await n.submit(), 'SM-COD0000001');
+
+      await c.read(cartProvider.future);
+      expect(c.read(cartCountProvider), 0);
+    });
+  });
+
   group('payment chooser with the hosted gateway', () {
     Future<void> pump(WidgetTester tester,
         {PaymentConfig? config,
@@ -242,7 +298,8 @@ void main() {
           reason: 'the gateway page lists the banks');
       expect(find.text('GrabPay'), findsOneWidget);
       expect(find.textContaining("Touch 'n Go"), findsNothing);
-      expect(find.textContaining('sandbox'), findsOneWidget);
+      expect(
+          find.textContaining("Stripe's secure payment page"), findsOneWidget);
 
       await tester.tap(find.byKey(const Key('channel-ewallet')));
       expect(picked, PaymentChannel.ewallet);

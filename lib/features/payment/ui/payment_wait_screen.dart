@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../app/theme.dart';
 import '../../../core/money.dart';
 import '../../../core/widgets/ui_kit.dart';
+import '../../cart/state/cart_provider.dart';
 import '../../checkout/data/checkout_repository.dart';
 import '../../checkout/state/checkout_flow.dart';
 import '../data/payment_gateway.dart';
@@ -86,7 +87,10 @@ class _PaymentWaitScreenState extends ConsumerState<PaymentWaitScreen>
     if (p.isPending) return;
     _timer?.cancel();
     if (p.isPaid) {
+      // The server emptied the cart when it created the order; reload the
+      // app's copy so the Cart tab and badge show it empty.
       ref.invalidate(checkoutCartProvider);
+      ref.invalidate(cartProvider);
       context.go('/confirmation/${p.orderId}');
     }
   }

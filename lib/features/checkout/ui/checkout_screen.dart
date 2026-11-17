@@ -11,6 +11,7 @@ import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/loading_view.dart';
 import '../../../core/widgets/ui_kit.dart';
 import '../../payment/data/malaysia_payments.dart';
+import '../../cart/state/cart_provider.dart';
 import '../../payment/data/payment_gateway.dart';
 import '../../payment/ui/payment_chooser.dart';
 import '../../payment/ui/payment_gateway_screen.dart';
@@ -180,6 +181,7 @@ class _StepButtons extends ConsumerWidget {
       if (payment == null || !context.mounted) return;
       if (payment.isPaid) {
         ref.invalidate(checkoutCartProvider);
+        ref.invalidate(cartProvider);
         context.go('/confirmation/${payment.orderId}');
       } else {
         context.push('/payment/wait/${payment.id}', extra: payment.checkoutUrl);
