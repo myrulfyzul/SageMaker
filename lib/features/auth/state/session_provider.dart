@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/api_client.dart';
 import '../../../core/network/app_failure.dart';
+import '../../../core/storage/preferences_provider.dart';
 import '../../../core/storage/token_store.dart';
 import '../data/auth_user.dart';
 
@@ -57,6 +59,10 @@ class SessionNotifier extends Notifier<SessionState> {
 
   /// Validates the stored token and updates [state]. Also used as the
   /// "session refresh" that applies a changed role (Req 6.11).
+  ///
+  /// A returning user whose account was saved on this device is let into the
+  /// app at once and the token is checked in the background, so a sleeping
+  /// server never holds up the start screen. A 401 still signs them out.
   Future<void> validate() async {
     final String? token;
     try {
@@ -68,6 +74,10 @@ class SessionNotifier extends Notifier<SessionState> {
     if (token == null || token.isEmpty) {
       state = const SessionSignedOut();
       return;
+    }
+    final cached = await _cachedUser();
+    if (cached != null && state is! SessionSignedIn) {
+      state = SessionSignedIn(cached);
     }
     final client = ref.read(apiClientProvider);
     // A free-tier server sleeps when idle and takes up to a minute to wake,
@@ -81,10 +91,18 @@ class SessionNotifier extends Notifier<SessionState> {
           timeout: reachabilityTimeout,
           deleteTokenOn401: false,
         );
-        state = SessionSignedIn(_userFrom(data));
+        final user = _userFrom(data);
+        await _saveUser(user);
+        // Only replace the state when something changed (e.g. a new role),
+        // so screens are not rebuilt for nothing.
+        final now = state;
+        if (now is! SessionSignedIn || now.user != user) {
+          state = SessionSignedIn(user);
+        }
         return;
       } on UnauthorizedFailure {
         await ref.read(authTokenProvider.notifier).clear();
+        await _saveUser(null);
         state = const SessionSignedOut();
         return;
       } catch (e) {
@@ -93,9 +111,13 @@ class SessionNotifier extends Notifier<SessionState> {
           await Future<void>.delayed(_retryPause);
           continue;
         }
-        // Give up: keep the token, show the login screen.
-        state = SessionServerUnreachable(
-            _unreachableMessage(e is AppFailure ? e : null, client.baseUrl));
+        // Give up. A user let in from the saved account stays in; screens
+        // that need the server show their own retry. Otherwise keep the
+        // token and show the login screen.
+        if (state is! SessionSignedIn) {
+          state = SessionServerUnreachable(
+              _unreachableMessage(e is AppFailure ? e : null, client.baseUrl));
+        }
         return;
       }
     }
@@ -119,8 +141,48 @@ class SessionNotifier extends Notifier<SessionState> {
       role: map['role']?.toString(),
     );
     await ref.read(authTokenProvider.notifier).setToken(token);
+    await _saveUser(user);
     state = SessionSignedIn(user);
     return user;
+  }
+
+  static const _userKey = 'sagemaker_session_user_v1';
+
+  /// The account saved on this device at the last sign-in or check, or null.
+  Future<AuthUser?> _cachedUser() async {
+    try {
+      final prefs = await ref.read(sharedPreferencesProvider.future);
+      final raw = prefs?.getString(_userKey);
+      if (raw == null) return null;
+      final map = Map<String, dynamic>.from(jsonDecode(raw) as Map);
+      final user = AuthUser.fromJson(map);
+      return user.id > 0 ? user : null;
+    } catch (_) {
+      return null; // unreadable: fall back to waiting for the server
+    }
+  }
+
+  /// Saves (or with null, forgets) the signed-in account: id, name, email
+  /// and role only. The token stays in its own store.
+  Future<void> _saveUser(AuthUser? user) async {
+    try {
+      final prefs = await ref.read(sharedPreferencesProvider.future);
+      if (prefs == null) return;
+      if (user == null) {
+        await prefs.remove(_userKey);
+      } else {
+        await prefs.setString(
+            _userKey,
+            jsonEncode({
+              'id': user.id,
+              'name': user.name,
+              'email': user.email,
+              'role': user.role.name,
+            }));
+      }
+    } catch (_) {
+      // Storage blocked: the app still works, it just waits at start-up.
+    }
   }
 
   /// Revokes the token on a best-effort basis and always signs out locally.
@@ -134,6 +196,7 @@ class SessionNotifier extends Notifier<SessionState> {
       }
     }
     await ref.read(authTokenProvider.notifier).clear();
+    await _saveUser(null);
     state = const SessionSignedOut();
   }
 

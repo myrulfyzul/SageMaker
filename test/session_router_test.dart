@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -146,6 +147,53 @@ void main() {
       expect(c.read(sessionProvider), isA<SessionSignedIn>());
       expect(calls, 3);
     }, timeout: const Timeout(Duration(seconds: 20)));
+
+    test('a saved account opens the app at once while the server sleeps',
+        () async {
+      SharedPreferences.setMockInitialValues({
+        'sagemaker_session_user_v1':
+            '{"id":1,"name":"Nur","email":"n@x.my","role":"seller"}',
+      });
+      final store = MemoryTokenStore('tok');
+      final c = _container(
+        store: store,
+        wakeBudget: Duration.zero,
+        client: () =>
+            MockClient((_) async => throw http.ClientException('asleep')),
+      );
+      final s = await _settle(c);
+      expect(s, isA<SessionSignedIn>());
+      expect((s as SessionSignedIn).role, AppRole.seller);
+      // The server stayed unreachable: still signed in, token kept.
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      expect(c.read(sessionProvider), isA<SessionSignedIn>());
+      expect(await store.read(), 'tok');
+    });
+
+    test('a saved account is signed out when the server rejects the token',
+        () async {
+      SharedPreferences.setMockInitialValues({
+        'sagemaker_session_user_v1':
+            '{"id":1,"name":"Nur","email":"n@x.my","role":"customer"}',
+      });
+      final store = MemoryTokenStore('old');
+      final c = _container(
+        store: store,
+        client: () => MockClient((_) async => _json({
+              'error': {'code': 'session_expired'}
+            }, 401)),
+      );
+      c.listen(sessionProvider, (_, __) {});
+      for (var i = 0;
+          i < 50 && c.read(sessionProvider) is! SessionSignedOut;
+          i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 10));
+      }
+      expect(c.read(sessionProvider), isA<SessionSignedOut>());
+      expect(await store.read(), isNull);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('sagemaker_session_user_v1'), isNull);
+    });
 
     test('login stores token and logout clears it', () async {
       final store = MemoryTokenStore();
