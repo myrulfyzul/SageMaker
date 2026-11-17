@@ -19,3 +19,5 @@ backend/media/
 android/key.properties
 *.jks
 *.keystore
+
+tools/
