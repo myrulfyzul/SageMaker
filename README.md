@@ -68,6 +68,16 @@ With a Stripe sandbox key set, **Pay** opens Stripe's hosted payment page (real 
 
 **Run it locally.** Set `STRIPE_SECRET_KEY` and `PUBLIC_BASE_URL=http://127.0.0.1:8000` before starting the backend. Stripe cannot reach `127.0.0.1` for webhooks, so locally it relies on the polling (or use the Stripe CLI: `stripe listen --forward-to 127.0.0.1:8000/api/payments/webhook/stripe`).
 
+## 0.3 Keep the API awake (free)
+
+Render's free tier sleeps after 15 idle minutes and takes 30 to 60 seconds to wake, which is when the app shows "Waking up the server". GitHub's scheduled job (`.github/workflows/keep-api-awake.yml`) is only a backup because GitHub often runs schedules late. Use a free external monitor as well:
+
+1. Sign up at https://uptimerobot.com (free plan).
+2. **Add New Monitor**: type **HTTP(s)**, URL `https://sagemaker-api.onrender.com/api/health`, interval **5 minutes**.
+3. Save. Its dashboard also shows whether the API stayed up.
+
+Expect one short wake-up after each Render redeploy (every push to GitHub). Render's paid Starter plan never sleeps, if you ever need that.
+
 ## 1. Setup on Windows with VS Code (follow in order)
 
 Run every command from the repository root (`D:\Documents\SAGEMAKER\sagemaker-flutter`) in a VS Code PowerShell terminal.
