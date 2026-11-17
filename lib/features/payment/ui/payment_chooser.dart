@@ -37,9 +37,12 @@ class PaymentChooser extends StatelessWidget {
   List<PaymentChannel> get _channels {
     if (codOnly) return const [PaymentChannel.cod];
     if (_hosted) {
+      // Only what the server says the gateway has switched on (FPX may not
+      // be enabled on the Stripe account).
+      final allowed = config!.methods.toSet();
       return [
         for (final c in PaymentChannel.values)
-          if (c != PaymentChannel.duitnow) c,
+          if (c != PaymentChannel.duitnow && allowed.contains(c.method)) c,
       ];
     }
     return PaymentChannel.values;

@@ -90,30 +90,54 @@ ARTISANS = [
      '0191110004', 'kavitha.r@example.com', '5 Jalan Dhoby, Johor Bahru, Johor'),
 ]
 
-# (id, name, description, category slug, price sen, artisan index, made to order, opening stock, threshold)
+# Real products from shop.sagemaker.asia (November 2026 snapshot: names, prices and photo URLs).
+# (id, name, description, category slug, price sen, artisan index, made to order, opening stock, threshold,
+#  image URLs)
 PRODUCTS = [
-    ('batik-everyday-tote', 'Batik Everyday Tote', 'Lined cotton tote with a batik print.',
-     'tote-bags', 3800, 0, False, 120, 5),
-    ('songket-market-tote', 'Songket Market Tote', 'Sturdy market tote trimmed with songket.',
-     'tote-bags', 5200, 0, True, 40, 5),
-    ('wau-bulan-plush-kite', 'Wau Bulan Plush Kite', 'Soft plush kite inspired by the wau bulan.',
-     'toys', 2900, 1, False, 85, 5),
-    ('gasing-soft-top', 'Gasing Soft Spinning Top', 'Felt spinning top for toddlers.',
-     'toys', 2200, 1, False, 2, 5),
-    ('congkak-felt-game', 'Congkak Felt Game', 'Travel-size congkak board made of felt.',
-     'toys', 4500, 1, False, 60, 5),
-    ('batik-gift-set', 'Batik Gift Set', 'Gift box with a batik pouch, coaster and card.',
-     'gifts', 6800, 2, True, 25, 5),
-    ('keris-bookmark-duo', 'Keris Bookmark Duo', 'Two embroidered bookmarks.',
-     'gifts', 1800, 2, False, 0, 5),
-    ('raya-greeting-pouch', 'Raya Greeting Pouch', 'Embroidered pouch for duit raya.',
-     'gifts', 3000, 2, True, 200, 5),
-    ('tenun-scrunchie-set', 'Tenun Hair Scrunchie Set', 'Three woven scrunchies.',
-     'accessories', 1600, 3, False, 150, 5),
-    ('batik-passport-cover', 'Batik Passport Cover', 'Passport cover in batik cotton.',
-     'accessories', 3200, 3, False, 5, 5),
-    ('mini-coin-purse', 'Mini Coin Purse', 'Zip coin purse in printed cotton.',
-     'accessories', 1500, 3, False, 300, 5),
+    ('palas-knot-bag', 'Palas Knot Bag',
+     'Festive knot bag inspired by the shape of ketupat palas, Raya with a modern twist.',
+     'tote-bags', 3500, 0, False, 120, 5,
+     ('https://cdn.shopify.com/s/files/1/0718/3600/8661/files/WhatsAppImage2026-02-25at11.28.07AM.jpg?v=1771991747&width=600', 'https://cdn.shopify.com/s/files/1/0718/3600/8661/files/IMG_8173.heic?v=1772086342&width=600', 'https://cdn.shopify.com/s/files/1/0718/3600/8661/files/IMG_8147_2.heic?v=1772086342&width=600')),
+    ('jendela-totebag-coaster', 'Jendela Totebag with Coaster',
+     'Classic Heritage Series tote with a matching coaster, sewn by our women artisans.',
+     'tote-bags', 6000, 0, True, 40, 5,
+     ('https://cdn.shopify.com/s/files/1/0718/3600/8661/files/GeneratedImageSeptember16_2025-12_46PMcopy.png?v=1757999442&width=600', 'https://cdn.shopify.com/s/files/1/0718/3600/8661/files/Generated_Image_September_08_2025_-_5_21PM.png?v=1757999442&width=600', 'https://cdn.shopify.com/s/files/1/0718/3600/8661/files/MG_0197_copy.jpg?v=1757999442&width=600')),
+    ('finger-puppets-bundle', 'Malaysian Finger Puppets Bundle (Boys & Girls)',
+     'Celebrate diversity through play with a bundle of Malaysian costume finger puppets.',
+     'toys', 5500, 1, False, 85, 5,
+     ('https://cdn.shopify.com/s/files/1/0718/3600/8661/files/IMG_9062.heic?v=1761493861&width=600', 'https://cdn.shopify.com/s/files/1/0718/3600/8661/files/IMG_9066.heic?v=1761493861&width=600', 'https://cdn.shopify.com/s/files/1/0718/3600/8661/files/IMG_9063.heic?v=1761493861&width=600')),
+    ('hang-tuah-finger-puppet', 'Hang Tuah Finger Puppet',
+     'Bring the legend of Hang Tuah to life with imaginative play and storytelling.',
+     'toys', 1500, 1, False, 2, 5,
+     ('https://cdn.shopify.com/s/files/1/0718/3600/8661/files/MG_0033.jpg?v=1739780226&width=600',)),
+    ('malaysia-map-puzzle', 'Malaysia Map Puzzle',
+     'Discover Malaysia, state by state, in a fun and interactive fabric puzzle.',
+     'toys', 8900, 1, True, 60, 5,
+     ('https://cdn.shopify.com/s/files/1/0718/3600/8661/files/WhatsApp_Image_2025-12-16_at_7.48.47_PM.jpg?v=1766060567&width=600', 'https://cdn.shopify.com/s/files/1/0718/3600/8661/files/WhatsApp_Image_2025-12-16_at_8.48.21_PM.jpg?v=1766060567&width=600', 'https://cdn.shopify.com/s/files/1/0718/3600/8661/files/WhatsApp_Image_2025-12-16_at_8.49.01_PM.jpg?v=1766060567&width=600')),
+    ('coaster-charm-hang-tuah', 'Coaster Charm, Hang Tuah CNY Edition',
+     'A touch of heritage for your daily rituals: a handmade coaster with a Hang Tuah charm.',
+     'gifts', 1500, 2, True, 25, 5,
+     ('https://cdn.shopify.com/s/files/1/0718/3600/8661/files/MG_0152_c1a34579-3ca4-49b5-b986-e9fe1c5ac4c8.jpg?v=1741237150&width=600', 'https://cdn.shopify.com/s/files/1/0718/3600/8661/files/MG_0043_8fdf3ba4-7947-4178-ae8d-e8b6400aa1c7.jpg?v=1741237150&width=600', 'https://cdn.shopify.com/s/files/1/0718/3600/8661/files/MG_0018.jpg?v=1741237150&width=600')),
+    ('batik-key-wristlet', 'Batik Key Wristlet',
+     'Made from small-cut batik pieces left over from production, so beautiful remnants stay in use.',
+     'gifts', 1800, 2, False, 0, 5,
+     ('https://cdn.shopify.com/s/files/1/0718/3600/8661/files/GeneratedImageNovember21_2025-7_48PM_dc14b1a1-a659-43dc-b3d9-b73b55cf99ae.png?v=1769495152&width=600',)),
+    ('batik-key-wristlet-charm', 'Batik Key Wristlet with Charm',
+     'Our batik key wristlet finished with a charm, handcrafted from excess batik pieces.',
+     'gifts', 2300, 2, True, 200, 5,
+     ('https://cdn.shopify.com/s/files/1/0718/3600/8661/files/WhatsApp_Image_2026-03-04_at_2.28.27_PM.jpg?v=1772769914&width=600', 'https://cdn.shopify.com/s/files/1/0718/3600/8661/files/WhatsApp_Image_2026-01-02_at_4.40.09_PM.jpg?v=1772770185&width=600')),
+    ('travel-bag-buddy', 'Travel Bag Buddy',
+     'An adorable travel companion for your bag, with a little surprise inside.',
+     'accessories', 3500, 3, False, 150, 5,
+     ('https://cdn.shopify.com/s/files/1/0718/3600/8661/files/WhatsAppImage2026-10-02at12.12.43PM.jpg?v=1791520219&width=600', 'https://cdn.shopify.com/s/files/1/0718/3600/8661/files/WhatsApp_Image_2026-10-01_at_11.54.48_AM.jpg?v=1791520251&width=600', 'https://cdn.shopify.com/s/files/1/0718/3600/8661/files/WhatsApp_Image_2026-10-01_at_11.54.48_AM_1.jpg?v=1791520275&width=600')),
+    ('upcycled-denim-school-bag', 'Upcycled Denim School Bag',
+     'Back to School 2.0: a sturdy school bag made from upcycled denim.',
+     'accessories', 20000, 3, True, 5, 5,
+     ('https://cdn.shopify.com/s/files/1/0718/3600/8661/files/WhatsApp_Image_2026-11-03_at_3.05.10_AM.jpg?v=1793646387&width=600', 'https://cdn.shopify.com/s/files/1/0718/3600/8661/files/WhatsApp_Image_2026-11-03_at_3.05.08_AM.jpg?v=1793646387&width=600', 'https://cdn.shopify.com/s/files/1/0718/3600/8661/files/IMG_6719.heic?v=1793590838&width=600')),
+    ('malaysian-fruit-busy-book', 'Malaysian Fruit Busy Book',
+     'A mini busy book introducing durian, mangosteen, rambutan and papaya.',
+     'fabric-books', 3900, 3, True, 300, 5,
+     ('https://cdn.shopify.com/s/files/1/0718/3600/8661/files/IMG_9018.jpg?v=1759935475&width=600', 'https://cdn.shopify.com/s/files/1/0718/3600/8661/files/IMG_9069.jpg?v=1759935475&width=600', 'https://cdn.shopify.com/s/files/1/0718/3600/8661/files/IMG_9020.jpg?v=1759935475&width=600')),
 ]
 BUNDLED_SLUG = {'Kids & Toys': 'fabric-books', 'Bags': 'tote-bags', 'Accessories': 'accessories'}
 
@@ -129,28 +153,28 @@ TIMELINE = {
 # (fulfilment status, owner key, method, payment status, payment outcome, days ago, [(product, qty)])
 APP_ORDERS = [
     ('placed', 'customer1', 'cod', 'pending_cod', 'pending_cod', 1,
-     [('batik-everyday-tote', 1), ('wau-bulan-plush-kite', 2)]),
+     [('palas-knot-bag', 1), ('finger-puppets-bundle', 2)]),
     ('confirmed', 'customer2', 'card', 'paid', 'success', 3,
-     [('songket-market-tote', 2), ('mini-coin-purse', 1)]),
+     [('jendela-totebag-coaster', 2), ('malaysian-fruit-busy-book', 1)]),
     ('preparing', 'customer3', 'fpx', 'paid', 'success', 5,
-     [('batik-gift-set', 1), ('raya-greeting-pouch', 5)]),
+     [('coaster-charm-hang-tuah', 1), ('batik-key-wristlet-charm', 5)]),
     ('shipped', 'customer1', 'ewallet', 'paid', 'success', 9,
-     [('congkak-felt-game', 1), ('tenun-scrunchie-set', 2)]),
+     [('malaysia-map-puzzle', 1), ('travel-bag-buddy', 2)]),
     ('delivered', 'customer2', 'card', 'paid', 'success', 20,
-     [('songket-market-tote', 1), ('batik-gift-set', 1)]),
-    ('cancelled', 'customer3', 'card', 'cancelled', 'cancelled', 14, [('batik-passport-cover', 1)]),
-    ('payment_failed', 'customer1', 'card', 'failed', 'failed', 2, [('keris-bookmark-duo', 1)]),
+     [('jendela-totebag-coaster', 1), ('coaster-charm-hang-tuah', 1)]),
+    ('cancelled', 'customer3', 'card', 'cancelled', 'cancelled', 14, [('upcycled-denim-school-bag', 1)]),
+    ('payment_failed', 'customer1', 'card', 'failed', 'failed', 2, [('batik-key-wristlet', 1)]),
 ]
 
 # Production_Status -> (priority, progress percent, artisan index or None, source)
 # source: ('order', fulfilment status, product id) or ('custom', custom order key)
 JOBS = [
-    ('order_confirmed', 'normal', 0, None, ('order', 'confirmed', 'songket-market-tote')),
-    ('production_assigned', 'high', 0, 2, ('order', 'preparing', 'batik-gift-set')),
+    ('order_confirmed', 'normal', 0, None, ('order', 'confirmed', 'jendela-totebag-coaster')),
+    ('production_assigned', 'high', 0, 2, ('order', 'preparing', 'coaster-charm-hang-tuah')),
     ('in_production', 'normal', 40, 0, ('custom', 'accepted')),
-    ('quality_checking', 'urgent', 90, 2, ('order', 'preparing', 'raya-greeting-pouch')),
-    ('completed', 'low', 100, 0, ('order', 'delivered', 'songket-market-tote')),
-    ('ready_for_fulfilment', 'normal', 100, 2, ('order', 'delivered', 'batik-gift-set')),
+    ('quality_checking', 'urgent', 90, 2, ('order', 'preparing', 'batik-key-wristlet-charm')),
+    ('completed', 'low', 100, 0, ('order', 'delivered', 'jendela-totebag-coaster')),
+    ('ready_for_fulfilment', 'normal', 100, 2, ('order', 'delivered', 'coaster-charm-hang-tuah')),
 ]
 
 
@@ -261,12 +285,15 @@ def _seed_products(conn: sqlite3.Connection, artisan_ids: list[int]) -> dict[str
             inventory_api.initialise(conn, pid, None, BUNDLED_STOCK)
         catalogue[pid] = {'id': pid, 'name': item['name'], 'price': price}
 
-    for pid, name, description, slug, price, artisan_index, made_to_order, stock, threshold in PRODUCTS:
+    for pid, name, description, slug, price, artisan_index, made_to_order, stock, threshold, photos in PRODUCTS:
         conn.execute(
             'INSERT INTO products (id, name, description, category_id, price_sen, artisan_id, made_to_order, '
             'is_active, is_demo, created_at, updated_at) VALUES (?,?,?,?,?,?,?,1,1,?,?)',
             (pid, name, description, categories[slug], price, artisan_ids[artisan_index], int(made_to_order),
              now, now))
+        for order, url in enumerate(photos):
+            conn.execute('INSERT INTO product_images (product_id, external_url, sort_order, is_demo) VALUES (?,?,?,1)',
+                         (pid, url, order))
         inventory_api.initialise(conn, pid, None, stock, threshold)  # opening stock: no adjustment row
         catalogue[pid] = {'id': pid, 'name': name, 'price': price}
     return catalogue
@@ -427,8 +454,8 @@ def _seed_notifications(conn: sqlite3.Connection, users: dict[str, dict[str, Any
                                  f"Your custom order {custom['accepted']} is now in_progress.",
                                  ('custom_order', str(custom['accepted']))),
         notifications_api.create(conn, users['seller']['id'], 'low_stock', 'Low stock',
-                                 'Gasing Soft Spinning Top is at or below its low-stock threshold.',
-                                 ('product', 'gasing-soft-top')),
+                                 'Hang Tuah Finger Puppet is at or below its low-stock threshold.',
+                                 ('product', 'hang-tuah-finger-puppet')),
         notifications_api.create(conn, users['admin']['id'], 'system', 'Welcome to SageMaker',
                                  'Your store is ready. Products, artisans and sample orders have been loaded.'),
     ]

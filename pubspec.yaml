@@ -25,6 +25,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/products.json
+    - assets/brand/sagemaker_logo.png
   # Bundled (SIL Open Font Licence, see assets/fonts/OFL-*.txt) so the app
   # works offline and needs no runtime font download.
   fonts:

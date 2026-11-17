@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:sagemaker_flutter/app/theme.dart';
 import 'package:sagemaker_flutter/core/network/api_client.dart';
+import 'package:sagemaker_flutter/core/widgets/sagemaker_logo.dart';
 import 'package:sagemaker_flutter/core/storage/legacy_local_store.dart';
 import 'package:sagemaker_flutter/core/storage/token_store.dart';
 import 'package:sagemaker_flutter/features/auth/state/auth_actions.dart';
@@ -45,7 +46,7 @@ void main() {
   group('LoginScreen', () {
     testWidgets('shows the SageMaker brand without scrolling', (tester) async {
       await _pump(tester, (_) async => _json({}, 401));
-      expect(find.text('SageMaker'), findsOneWidget);
+      expect(find.byType(SageMakerLogo), findsOneWidget);
       expect(find.textContaining('prototype'), findsNothing);
     });
 

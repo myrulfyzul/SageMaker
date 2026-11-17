@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import time
 import uuid
 from typing import Any, Optional
 
@@ -57,11 +58,30 @@ def reject_simulated_when_gateway(settings: Settings, method: str) -> None:
         raise UseGateway()
 
 
-def gateway_methods(settings: Settings) -> list[str]:
-    """Methods the checkout may offer: the gateway's own, plus cash on delivery."""
-    if settings.gateway_enabled:
-        return [*STRIPE_METHOD_TYPES, 'cod']
-    return [*PAYMENT_METHODS]
+_METHODS_CACHE_SECONDS = 300
+_methods_cache: dict[int, tuple[float, list[str]]] = {}
+
+
+def gateway_methods(settings: Settings, gateway: Any = None) -> list[str]:
+    """Methods the checkout may offer: the gateway methods switched on in the Stripe Dashboard, plus cash on
+    delivery. Stripe's answer is cached for 5 minutes; if Stripe cannot say, all gateway methods are offered and
+    starting a payment explains which one is unavailable."""
+    if not settings.gateway_enabled:
+        return [*PAYMENT_METHODS]
+    every = [*STRIPE_METHOD_TYPES]
+    if gateway is None or not hasattr(gateway, 'enabled_method_types'):
+        return [*every, 'cod']
+    now = time.monotonic()
+    cached = _methods_cache.get(id(gateway))
+    if cached and now - cached[0] < _METHODS_CACHE_SECONDS:
+        return cached[1]
+    try:
+        enabled = gateway.enabled_method_types()
+        methods = [m for m in every if STRIPE_METHOD_TYPES[m] in enabled] + ['cod']
+    except GatewayError:
+        return [*every, 'cod']  # not cached, so the next request asks Stripe again
+    _methods_cache[id(gateway)] = (now, methods)
+    return methods
 
 
 def _payment_dict(row: sqlite3.Row) -> dict[str, Any]:

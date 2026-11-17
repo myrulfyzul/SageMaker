@@ -82,7 +82,8 @@ void main() {
       });
       expect(c.isHosted, isTrue);
       expect(c.ewalletProvider, 'grabpay');
-      expect(PaymentConfig.fromJson({'gateway': 'prototype'}).isHosted, isFalse);
+      expect(
+          PaymentConfig.fromJson({'gateway': 'prototype'}).isHosted, isFalse);
       expect(const PaymentConfig().isHosted, isFalse);
     });
 
@@ -126,7 +127,8 @@ void main() {
 
       final payment = await n.startGatewayPayment();
       expect(payment!.checkoutUrl, 'https://pay.test/x');
-      final req = calls.singleWhere((r) => r.url.path == '/api/payments/sessions');
+      final req =
+          calls.singleWhere((r) => r.url.path == '/api/payments/sessions');
       final body = jsonDecode(req.body) as Map<String, dynamic>;
       expect(body['method'], 'fpx');
       expect(body.containsKey('outcome'), isFalse);
@@ -143,7 +145,8 @@ void main() {
     });
 
     test('e-wallet sends grabpay as the provider', () async {
-      final (c, calls) = _container((r) async => _json(201, _payment('pending')));
+      final (c, calls) =
+          _container((r) async => _json(201, _payment('pending')));
       final n = c.read(checkoutFlowProvider.notifier);
       n.useGateway(true);
       n.updateDelivery(_delivery);
@@ -155,7 +158,8 @@ void main() {
     });
 
     test('the same key is reused until the attempt is reset', () async {
-      final (c, calls) = _container((r) async => _json(201, _payment('pending')));
+      final (c, calls) =
+          _container((r) async => _json(201, _payment('pending')));
       final n = c.read(checkoutFlowProvider.notifier);
       n.useGateway(true);
       n.updateDelivery(_delivery);
@@ -172,7 +176,8 @@ void main() {
     });
 
     test('invalid delivery stops before any request', () async {
-      final (c, calls) = _container((r) async => _json(201, _payment('pending')));
+      final (c, calls) =
+          _container((r) async => _json(201, _payment('pending')));
       final n = c.read(checkoutFlowProvider.notifier);
       n.useGateway(true);
       n.chooseChannel(PaymentChannel.fpx);
@@ -247,6 +252,19 @@ void main() {
       expect(provider, isNull);
     });
 
+    testWidgets('FPX is hidden when the Stripe account has not switched it on',
+        (tester) async {
+      await pump(tester,
+          config: const PaymentConfig(
+              gateway: 'stripe',
+              methods: ['ewallet', 'card', 'cod'],
+              ewalletProvider: 'grabpay'));
+      expect(find.byKey(const Key('channel-fpx')), findsNothing);
+      expect(find.byKey(const Key('channel-ewallet')), findsOneWidget);
+      expect(find.byKey(const Key('channel-card')), findsOneWidget);
+      expect(find.byKey(const Key('channel-cod')), findsOneWidget);
+    });
+
     testWidgets('the prototype keeps DuitNow QR and the bank list',
         (tester) async {
       await pump(tester, channel: PaymentChannel.fpx);
@@ -254,7 +272,8 @@ void main() {
       expect(find.byKey(const Key('provider-maybank2u')), findsOneWidget);
     });
 
-    testWidgets('cash on delivery only, for orders that cannot be re-paid online',
+    testWidgets(
+        'cash on delivery only, for orders that cannot be re-paid online',
         (tester) async {
       await pump(tester, config: _hosted, codOnly: true);
       expect(find.byKey(const Key('channel-cod')), findsOneWidget);
@@ -276,9 +295,11 @@ void main() {
         if (r.url.path.endsWith('/cancel')) {
           return onCancel != null
               ? onCancel(r)
-              : _json(200, _payment('cancelled', message: 'You cancelled the payment'));
+              : _json(200,
+                  _payment('cancelled', message: 'You cancelled the payment'));
         }
-        final reply = statusReplies[i < statusReplies.length ? i : statusReplies.length - 1];
+        final reply = statusReplies[
+            i < statusReplies.length ? i : statusReplies.length - 1];
         i++;
         return _json(200, reply);
       });
@@ -294,9 +315,11 @@ void main() {
         ),
         GoRoute(
             path: '/confirmation/:orderId',
-            builder: (_, s) =>
-                Scaffold(body: Text('confirmed ${s.pathParameters['orderId']}'))),
-        GoRoute(path: '/checkout', builder: (_, __) => const Scaffold(body: Text('checkout'))),
+            builder: (_, s) => Scaffold(
+                body: Text('confirmed ${s.pathParameters['orderId']}'))),
+        GoRoute(
+            path: '/checkout',
+            builder: (_, __) => const Scaffold(body: Text('checkout'))),
       ]);
       addTearDown(router.dispose);
       await tester.pumpWidget(UncontrolledProviderScope(
@@ -319,7 +342,8 @@ void main() {
       await tester.pump(const Duration(seconds: 1));
       await tester.pumpAndSettle();
       expect(find.text('confirmed SM-PAID000001'), findsOneWidget);
-      expect(paths.where((p) => p == 'GET /api/payments/sessions/PS-1').length, 2);
+      expect(
+          paths.where((p) => p == 'GET /api/payments/sessions/PS-1').length, 2);
     });
 
     testWidgets('"check now" confirms without waiting for the timer',
@@ -344,10 +368,12 @@ void main() {
       expect(find.text('checkout'), findsOneWidget);
     });
 
-    testWidgets('a refund is explained, not shown as a success', (tester) async {
+    testWidgets('a refund is explained, not shown as a success',
+        (tester) async {
       await pumpWait(tester, [
         _payment('refunded',
-            message: 'Some items sold out while you were paying, so the payment was refunded')
+            message:
+                'Some items sold out while you were paying, so the payment was refunded')
       ]);
       await tester.tap(find.byKey(const Key('wait-check')));
       await tester.pumpAndSettle();
@@ -357,7 +383,8 @@ void main() {
     });
 
     testWidgets('a network error keeps waiting and says so', (tester) async {
-      final (c, _) = _container((r) async => throw http.ClientException('offline'));
+      final (c, _) =
+          _container((r) async => throw http.ClientException('offline'));
       await tester.pumpWidget(UncontrolledProviderScope(
         container: c,
         child: MaterialApp(

@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/navigation_memory.dart';
 import '../../../core/network/app_failure.dart';
 import '../../../app/theme.dart';
+import '../../../core/widgets/sagemaker_logo.dart';
 import '../../../core/widgets/ui_kit.dart';
 import '../state/auth_actions.dart';
 import '../state/session_provider.dart';
@@ -134,9 +135,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Text('Sign in',
-                              style: Theme.of(context).textTheme.headlineMedium),
+                              style:
+                                  Theme.of(context).textTheme.headlineMedium),
                           const SizedBox(height: 4),
-                          Text('Welcome back. Sign in to shop and track your orders.',
+                          Text(
+                              'Welcome back. Sign in to shop and track your orders.',
                               style: Theme.of(context).textTheme.bodySmall),
                           const SizedBox(height: 18),
                           if (session is SessionServerUnreachable) ...[
@@ -239,29 +242,8 @@ class _BrandTitle extends StatelessWidget {
   Widget build(BuildContext context) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              gradient: kGoldGradient,
-              borderRadius: BorderRadius.circular(18),
-            ),
-            alignment: Alignment.center,
-            child: const Text('S',
-                style: TextStyle(
-                    fontFamily: kDisplayFont,
-                    color: kPrimary,
-                    fontSize: 32,
-                    fontWeight: FontWeight.w700)),
-          ),
-          const SizedBox(height: 16),
-          const Text('SageMaker',
-              style: TextStyle(
-                  fontFamily: kDisplayFont,
-                  color: Colors.white,
-                  fontSize: 34,
-                  fontWeight: FontWeight.w700)),
-          const SizedBox(height: 4),
+          const SageMakerLogo(height: 60, color: Colors.white),
+          const SizedBox(height: 12),
           const Text('Handmade with heart by women artisans.',
               style: TextStyle(color: Colors.white70, fontSize: 14)),
         ],

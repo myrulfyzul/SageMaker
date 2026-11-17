@@ -167,6 +167,21 @@ class StripeGateway:
     def expire_session(self, gateway_session_id: str) -> dict[str, Any]:
         return self._call('POST', f'/checkout/sessions/{urllib.parse.quote(gateway_session_id, safe="")}/expire', {})
 
+    def enabled_method_types(self) -> set[str]:
+        """Stripe payment method types that are available on the account and switched on in the Dashboard (default
+        payment method configuration). Raises GatewayError when Stripe cannot say."""
+        listing = self._call('GET', '/payment_method_configurations', {'limit': 20})
+        configs = [c for c in listing.get('data', []) if isinstance(c, dict) and c.get('active', True)]
+        default = next((c for c in configs if c.get('is_default')), configs[0] if configs else None)
+        if default is None:
+            raise GatewayError('No payment method configuration found.')
+        enabled = set()
+        for name, value in default.items():
+            if isinstance(value, dict) and value.get('available') and \
+                    (value.get('display_preference') or {}).get('value') == 'on':
+                enabled.add(name)
+        return enabled
+
     def refund(self, payment_intent_id: str, reference: str) -> dict[str, Any]:
         return self._call('POST', '/refunds', {'payment_intent': payment_intent_id},
                           idempotency_key=f'refund-{reference}')

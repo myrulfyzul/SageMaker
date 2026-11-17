@@ -43,7 +43,7 @@ def payment_config(request: Request) -> dict[str, Any]:
     return {
         'gateway': 'stripe' if settings.gateway_enabled else 'prototype',
         'sandbox': True,
-        'methods': payments_api.gateway_methods(settings),
+        'methods': payments_api.gateway_methods(settings, request.app.state.payment_gateway),
         'ewalletProvider': payments_api.GATEWAY_EWALLET if settings.gateway_enabled else None,
     }
 

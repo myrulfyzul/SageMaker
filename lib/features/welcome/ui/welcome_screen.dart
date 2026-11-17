@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/theme.dart';
+import '../../../core/widgets/sagemaker_logo.dart';
 import '../../../core/widgets/ui_kit.dart';
 import '../../../core/widgets/vimeo_player.dart';
 
@@ -166,29 +167,7 @@ class _Hero extends StatelessWidget {
           padding: EdgeInsets.fromLTRB(22, top + 16, 22, 28),
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              Container(
-                width: 40,
-                height: 40,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  gradient: kGoldGradient,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Text('S',
-                    style: TextStyle(
-                        fontFamily: kDisplayFont,
-                        fontSize: 24,
-                        color: kPrimary,
-                        fontWeight: FontWeight.w700)),
-              ),
-              const SizedBox(width: 10),
-              const Text('SAGEMAKER ASIA',
-                  style: TextStyle(
-                      color: Colors.white,
-                      letterSpacing: 2,
-                      fontWeight: FontWeight.w800)),
-            ]),
+            const SageMakerLogo(height: 46, color: Colors.white),
             const Spacer(),
             const FadeSlideIn(
               child: Text('GREAT things happen when we make things together.',

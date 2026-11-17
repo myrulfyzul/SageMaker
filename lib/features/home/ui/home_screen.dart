@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/theme.dart';
 import '../../../core/widgets/async_value_view.dart';
+import '../../../core/widgets/sagemaker_logo.dart';
 import '../../../core/widgets/ui_kit.dart';
 import '../../auth/state/session_provider.dart';
 import '../../catalogue/data/catalogue_models.dart';
@@ -99,27 +100,12 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Row(children: [
-      Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          gradient: kHeroGradient,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        alignment: Alignment.center,
-        child: const Text('S',
-            style: TextStyle(
-                fontFamily: kDisplayFont,
-                color: kAccent,
-                fontSize: 26,
-                fontWeight: FontWeight.w700)),
-      ),
-      const SizedBox(width: 12),
       Expanded(
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const SageMakerLogo(height: 38),
+          const SizedBox(height: 4),
           Text(name == null ? 'Selamat datang' : 'Hi, $name',
               style: theme.textTheme.bodySmall),
-          Text('SageMaker', style: theme.textTheme.headlineSmall),
         ]),
       ),
       IconButton.filledTonal(
@@ -246,7 +232,7 @@ class _HeroCarouselState extends State<_HeroCarousel> {
   Widget build(BuildContext context) {
     return Column(children: [
       SizedBox(
-        height: 200,
+        height: 232,
         child: PageView.builder(
           controller: _page,
           padEnds: false,
@@ -260,39 +246,44 @@ class _HeroCarouselState extends State<_HeroCarousel> {
                 gradient: s.gradient,
                 child: Row(children: [
                   Expanded(
+                    // Text on top, button at the bottom; fixed line limits so
+                    // nothing is cut mid-line on small phones.
                     child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(s.tag,
-                              style: const TextStyle(
-                                  color: kAccent,
-                                  fontSize: 11,
-                                  letterSpacing: 1.4,
-                                  fontWeight: FontWeight.w800)),
-                          const SizedBox(height: 6),
-                          Flexible(
-                            flex: 3,
-                            child: Text(s.title,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                    fontFamily: kDisplayFont,
-                                    color: Colors.white,
-                                    fontSize: 22,
-                                    height: 1.15,
-                                    fontWeight: FontWeight.w700)),
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(s.tag,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                      color: kAccent,
+                                      fontSize: 11,
+                                      letterSpacing: 1.2,
+                                      fontWeight: FontWeight.w800)),
+                              const SizedBox(height: 6),
+                              Text(s.title,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                      fontFamily: kDisplayFont,
+                                      color: Colors.white,
+                                      fontSize: 21,
+                                      height: 1.15,
+                                      fontWeight: FontWeight.w700)),
+                              const SizedBox(height: 6),
+                              Text(s.body,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 12.5,
+                                      height: 1.35)),
+                            ],
                           ),
-                          const SizedBox(height: 6),
-                          Flexible(
-                            flex: 3,
-                            child: Text(s.body,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                    color: Colors.white70, fontSize: 12.5)),
-                          ),
-                          const SizedBox(height: 10),
-                          const Spacer(flex: 1),
                           FilledButton(
                             style: FilledButton.styleFrom(
                               backgroundColor: kAccent,
@@ -313,7 +304,7 @@ class _HeroCarouselState extends State<_HeroCarousel> {
                   ),
                   const SizedBox(width: 8),
                   Icon(s.icon,
-                      size: 76, color: Colors.white.withValues(alpha: 0.85)),
+                      size: 64, color: Colors.white.withValues(alpha: 0.85)),
                 ]),
               ),
             );

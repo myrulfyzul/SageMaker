@@ -154,6 +154,49 @@ def test_config_reports_the_gateway(client, gclient):
     assert body['ewalletProvider'] == 'grabpay'
 
 
+def test_config_lists_only_methods_switched_on_in_stripe(gclient, fake):
+    from app.modules.payments import api as payments_api
+    payments_api._methods_cache.clear()
+    calls = []
+
+    def enabled():
+        calls.append(1)
+        return {'card', 'grabpay', 'link'}  # FPX not available on this account
+    fake.enabled_method_types = enabled
+    assert gclient.get('/api/payments/config').json()['methods'] == ['ewallet', 'card', 'cod']
+    gclient.get('/api/payments/config')
+    assert len(calls) == 1  # cached
+
+    payments_api._methods_cache.clear()
+
+    def down():
+        raise gw.GatewayError('down')
+    fake.enabled_method_types = down
+    assert gclient.get('/api/payments/config').json()['methods'] == ['fpx', 'ewallet', 'card', 'cod']
+    payments_api._methods_cache.clear()
+
+
+def test_enabled_method_types_reads_the_default_configuration():
+    listing = {'data': [
+        {'id': 'pmc_other', 'active': True, 'is_default': False,
+         'fpx': {'available': True, 'display_preference': {'value': 'on'}}},
+        {'id': 'pmc_default', 'active': True, 'is_default': True,
+         'card': {'available': True, 'display_preference': {'value': 'on'}},
+         'grabpay': {'available': True, 'display_preference': {'value': 'off'}},
+         'fpx': {'available': False, 'display_preference': {'value': 'on'}},
+         'livemode': False},
+    ]}
+    seen = {}
+
+    def http(method, url, headers, body):
+        seen['url'] = url
+        return 200, listing
+    assert gw.StripeGateway(TEST_KEY, http=http).enabled_method_types() == {'card'}
+    assert seen['url'].startswith('https://api.stripe.com/v1/payment_method_configurations')
+    with pytest.raises(gw.GatewayError):
+        gw.StripeGateway(TEST_KEY, http=lambda *a: (200, {'data': []})).enabled_method_types()
+
+
 def test_live_and_malformed_stripe_keys_are_refused():
     base = {'DATABASE_PATH': 'x.sqlite3'}
     key = 'STRIPE' + '_SECRET_KEY'
