@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -91,6 +93,53 @@ String? resolveRedirect(SessionState session, Uri uri) {
   }
 }
 
+/// Start-up screen. If the check takes more than a few seconds the server is
+/// probably waking from sleep, so say so instead of spinning silently.
+class _Splash extends StatefulWidget {
+  const _Splash();
+
+  @override
+  State<_Splash> createState() => _SplashState();
+}
+
+class _SplashState extends State<_Splash> {
+  bool _slow = false;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer(const Duration(seconds: 4), () {
+      if (mounted) setState(() => _slow = true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+        body: Stack(children: [
+          const LoadingView(),
+          if (_slow)
+            const Align(
+              alignment: Alignment(0, 0.35),
+              child: Padding(
+                padding: EdgeInsets.all(24),
+                child: Text(
+                  'Waking up the server. This can take up to a minute the first time.',
+                  key: Key('splash-waking'),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+        ]),
+      );
+}
+
 /// Router with role redirect, `/login?from=` return and role shells.
 final routerProvider = Provider<GoRouter>((ref) {
   final memory = ref.read(navigationMemoryProvider);
@@ -122,7 +171,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(
         path: _splash,
-        builder: (context, state) => const Scaffold(body: LoadingView()),
+        builder: (context, state) => const _Splash(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) =>

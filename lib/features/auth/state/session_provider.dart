@@ -70,24 +70,38 @@ class SessionNotifier extends Notifier<SessionState> {
       return;
     }
     final client = ref.read(apiClientProvider);
-    try {
-      final data = await client.get(
-        '/api/auth/session',
-        timeout: reachabilityTimeout,
-        deleteTokenOn401: false,
-      );
-      state = SessionSignedIn(_userFrom(data));
-    } on UnauthorizedFailure {
-      await ref.read(authTokenProvider.notifier).clear();
-      state = const SessionSignedOut();
-    } on AppFailure catch (e) {
-      // Network, timeout, 5xx: keep the token, show the login screen.
-      state = SessionServerUnreachable(_unreachableMessage(e, client.baseUrl));
-    } catch (_) {
-      state = SessionServerUnreachable(
-          _unreachableMessage(null, client.baseUrl));
+    // A free-tier server sleeps when idle and takes up to a minute to wake,
+    // so keep trying (each attempt still times out after 10 s) until the
+    // wake-up budget is spent. Only then report it as unreachable.
+    final deadline = DateTime.now().add(ref.read(serverWakeBudgetProvider));
+    while (true) {
+      try {
+        final data = await client.get(
+          '/api/auth/session',
+          timeout: reachabilityTimeout,
+          deleteTokenOn401: false,
+        );
+        state = SessionSignedIn(_userFrom(data));
+        return;
+      } on UnauthorizedFailure {
+        await ref.read(authTokenProvider.notifier).clear();
+        state = const SessionSignedOut();
+        return;
+      } catch (e) {
+        // Network, timeout, 5xx: retry while the server may still be waking.
+        if (DateTime.now().add(_retryPause).isBefore(deadline)) {
+          await Future<void>.delayed(_retryPause);
+          continue;
+        }
+        // Give up: keep the token, show the login screen.
+        state = SessionServerUnreachable(
+            _unreachableMessage(e is AppFailure ? e : null, client.baseUrl));
+        return;
+      }
     }
   }
+
+  static const _retryPause = Duration(seconds: 2);
 
   /// Signs in. Throws an [AppFailure] on bad credentials, lockout or network
   /// problems and leaves the state unchanged.
@@ -133,9 +147,15 @@ class SessionNotifier extends Notifier<SessionState> {
 
   String _unreachableMessage(AppFailure? e, String baseUrl) {
     if (e is ServerFailure) return 'The server returned an error ($baseUrl)';
-    return 'The server could not be reached ($baseUrl)';
+    return 'The server could not be reached ($baseUrl). '
+        'Check your internet connection and sign in to try again.';
   }
 }
 
 final sessionProvider =
     NotifierProvider<SessionNotifier, SessionState>(SessionNotifier.new);
+
+/// How long start-up keeps retrying the server. Render's free tier needs 30
+/// to 60 s to wake from sleep; tests set this to zero.
+final serverWakeBudgetProvider =
+    Provider<Duration>((ref) => const Duration(seconds: 75));

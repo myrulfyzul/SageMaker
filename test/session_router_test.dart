@@ -39,9 +39,11 @@ ProviderContainer _container({
   required http.Client Function() client,
   String? token,
   TokenStore? store,
+  Duration wakeBudget = Duration.zero,
 }) {
   final tokens = store ?? MemoryTokenStore(token);
   final c = ProviderContainer(overrides: [
+    serverWakeBudgetProvider.overrideWithValue(wakeBudget),
     tokenStoreProvider.overrideWithValue(tokens),
     apiClientProvider.overrideWith((ref) {
       final t = ref.watch(authTokenProvider).value;
@@ -120,6 +122,30 @@ void main() {
       expect(s, isA<SessionServerUnreachable>());
       expect(await store.read(), 'keep');
     });
+
+    test('a sleeping server is retried until it wakes up', () async {
+      var calls = 0;
+      final c = _container(
+        token: 'tok',
+        wakeBudget: const Duration(seconds: 30),
+        client: () => MockClient((_) async {
+          calls++;
+          if (calls < 3) throw http.ClientException('waking');
+          return _json({
+            'user': {'id': 1, 'name': 'Nur', 'email': 'n@x.my'},
+            'role': 'customer',
+          });
+        }),
+      );
+      c.listen(sessionProvider, (_, __) {});
+      for (var i = 0;
+          i < 100 && c.read(sessionProvider) is SessionChecking;
+          i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      }
+      expect(c.read(sessionProvider), isA<SessionSignedIn>());
+      expect(calls, 3);
+    }, timeout: const Timeout(Duration(seconds: 20)));
 
     test('login stores token and logout clears it', () async {
       final store = MemoryTokenStore();
@@ -207,7 +233,8 @@ void main() {
       }
       expect(resolveRedirect(const SessionSignedOut(), u('/')), isNull);
       expect(resolveRedirect(const SessionSignedOut(), u('/cart')), isNull);
-      expect(resolveRedirect(const SessionSignedOut(), u('/splash')), '/welcome');
+      expect(
+          resolveRedirect(const SessionSignedOut(), u('/splash')), '/welcome');
     });
 
     test('unreachable at splash goes to login', () {
@@ -265,7 +292,8 @@ void main() {
     testWidgets('signed-out launch opens the SageMaker welcome page',
         (tester) async {
       final container = ProviderContainer(overrides: [
-        sessionProvider.overrideWith(() => _FakeSession(const SessionSignedOut())),
+        sessionProvider
+            .overrideWith(() => _FakeSession(const SessionSignedOut())),
       ]);
       addTearDown(container.dispose);
       final router = container.read(routerProvider);
@@ -275,7 +303,8 @@ void main() {
       ));
       await tester.pumpAndSettle();
       expect(router.state.uri.path, '/welcome');
-      expect(find.text('Stitches of Strength, Stories of Wonder'), findsWidgets);
+      expect(
+          find.text('Stitches of Strength, Stories of Wonder'), findsWidgets);
       expect(find.byType(NavigationBar), findsNothing);
       await tester.tap(find.byKey(const Key('welcome-shop')));
       await tester.pumpAndSettle();
