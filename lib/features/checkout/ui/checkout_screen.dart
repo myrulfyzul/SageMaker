@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme.dart';
 import '../../../core/constants.dart';
 import '../../../core/money.dart';
+import '../../../core/widgets/back_fallback.dart';
 import '../../../core/widgets/empty_view.dart';
 import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/loading_view.dart';
@@ -49,7 +50,9 @@ class CheckoutScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Checkout')),
+      appBar: AppBar(
+          leading: const FallbackBackButton(fallback: '/cart'),
+          title: const Text('Checkout')),
       // Wait for the payment config so the steps never change under the customer.
       body: config.isLoading
           ? const LoadingView()

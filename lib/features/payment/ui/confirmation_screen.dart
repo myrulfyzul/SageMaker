@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/theme.dart';
 import '../../../core/money.dart';
+import '../../../core/widgets/back_fallback.dart';
 import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/loading_view.dart';
 import '../../../core/widgets/ui_kit.dart';
@@ -58,7 +59,9 @@ class ConfirmationScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final order = ref.watch(placedOrderProvider(orderId));
     return Scaffold(
-      appBar: AppBar(title: const Text('Order confirmation')),
+      appBar: AppBar(
+          leading: const FallbackBackButton(fallback: '/'),
+          title: const Text('Order confirmation')),
       body: order.when(
         loading: () => const LoadingView(),
         error: (e, _) => ErrorView(
@@ -137,13 +140,17 @@ class ConfirmationScreen extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: FilledButton.icon(
-                    onPressed: () => context.go('/orders/${o.id}'),
+                    onPressed: () => context.push('/orders/${o.id}'),
                     icon: const Icon(Icons.local_shipping_outlined),
                     label: const Text('Track order')),
               ),
             OutlinedButton(
                 onPressed: () => context.go('/shop'),
                 child: const Text('Return to shop')),
+            TextButton(
+                key: const Key('confirmation-home'),
+                onPressed: () => context.go('/'),
+                child: const Text('Back to home')),
           ]);
         },
       ),

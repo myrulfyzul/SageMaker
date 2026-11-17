@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/widgets/back_fallback.dart';
 import '../features/about/ui/about_screen.dart';
 import '../features/admin/analytics/ui/analytics_screen.dart';
 import '../features/admin/dashboard/ui/dashboard_screen.dart';
@@ -47,6 +48,14 @@ import 'shells/staff_shell.dart';
 GoRoute _page(String path, Widget Function(GoRouterState s) build) =>
     GoRoute(path: path, builder: (context, state) => build(state));
 
+/// A screen outside the tab bar; [fallback] is where back goes when the
+/// screen was opened with nothing underneath it (e.g. after a payment).
+GoRoute _screen(String path, String fallback, Widget Function(GoRouterState s) build) =>
+    GoRoute(
+        path: path,
+        builder: (context, state) =>
+            BackFallback(fallback: fallback, child: build(state)));
+
 /// Customer tabs, in the order of the bottom bar (Req 18.1).
 List<StatefulShellBranch> customerBranches() => [
       StatefulShellBranch(routes: [_page('/', (_) => const HomeScreen())]),
@@ -66,9 +75,9 @@ List<StatefulShellBranch> customerBranches() => [
 
 /// Customer screens outside the tab bar (Req 18.3).
 List<RouteBase> customerRoutes() => [
-      _page('/product/:id',
+      _screen('/product/:id', '/shop',
           (s) => ProductDetailScreen(productId: s.pathParameters['id']!)),
-      _page('/checkout', (_) => const CheckoutScreen()),
+      _screen('/checkout', '/cart', (_) => const CheckoutScreen()),
       // Declared before '/payment/:orderId' so 'wait' is not read as an order id.
       GoRoute(
         path: '/payment/wait/:paymentId',
@@ -77,18 +86,17 @@ List<RouteBase> customerRoutes() => [
           checkoutUrl: state.extra is String ? state.extra as String : null,
         ),
       ),
-      _page('/payment/:orderId',
+      _screen('/payment/:orderId', '/orders',
           (s) => PaymentScreen(orderId: s.pathParameters['orderId']!)),
-      _page('/confirmation/:orderId',
+      _screen('/confirmation/:orderId', '/',
           (s) => ConfirmationScreen(orderId: s.pathParameters['orderId']!)),
-      _page('/orders', (_) => const MyOrdersScreen()),
-      _page('/orders/:id',
+      _screen('/orders', '/profile', (_) => const MyOrdersScreen()),
+      _screen('/orders/:id', '/orders',
           (s) => OrderTrackingScreen(orderId: s.pathParameters['id']!)),
-      _page('/notifications', (_) => const NotificationsScreen()),
-      _page('/custom-orders', (_) => const CustomOrdersScreen()),
-      _page('/custom-orders/new', (_) => const CustomOrderFormScreen()),
-      _page(
-          '/custom-orders/:id',
+      _screen('/notifications', '/', (_) => const NotificationsScreen()),
+      _screen('/custom-orders', '/profile', (_) => const CustomOrdersScreen()),
+      _screen('/custom-orders/new', '/custom-orders', (_) => const CustomOrderFormScreen()),
+      _screen('/custom-orders/:id', '/custom-orders',
           (s) => CustomOrderDetailScreen(
               orderId: int.tryParse(s.pathParameters['id']!) ?? 0)),
     ];

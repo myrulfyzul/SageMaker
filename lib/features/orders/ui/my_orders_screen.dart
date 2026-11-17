@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/money.dart';
 import '../../../core/network/app_failure.dart';
 import '../../../core/storage/legacy_local_store.dart';
+import '../../../core/widgets/back_fallback.dart';
 import '../../../core/widgets/async_value_view.dart';
 import '../../../core/widgets/empty_view.dart';
 import '../../../core/widgets/error_view.dart';
@@ -27,6 +28,7 @@ class MyOrdersScreen extends ConsumerWidget {
     final legacy = _legacyOrders(ref);
     return Scaffold(
       appBar: AppBar(
+        leading: const FallbackBackButton(fallback: '/profile'),
         title: const Text('My orders'),
         actions: [
           IconButton(

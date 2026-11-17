@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/theme.dart';
 import '../../../core/money.dart';
 import '../../../core/network/app_failure.dart';
+import '../../../core/widgets/back_fallback.dart';
 import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/loading_view.dart';
 import '../../../core/widgets/ui_kit.dart';
@@ -81,7 +82,9 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     final order = ref.watch(placedOrderProvider(widget.orderId));
     final config = ref.watch(paymentConfigProvider).value;
     return Scaffold(
-      appBar: AppBar(title: const Text('Payment')),
+      appBar: AppBar(
+          leading: const FallbackBackButton(fallback: '/orders'),
+          title: const Text('Payment')),
       body: order.when(
         loading: () => const LoadingView(),
         error: (e, _) => ErrorView(

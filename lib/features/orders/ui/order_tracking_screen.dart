@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/money.dart';
+import '../../../core/widgets/back_fallback.dart';
 import '../../../core/widgets/error_view.dart';
 import '../../../core/widgets/loading_view.dart';
 import '../data/order_models.dart';
@@ -19,6 +20,7 @@ class OrderTrackingScreen extends ConsumerWidget {
     final notifier = ref.read(orderDetailProvider(orderId).notifier);
     return Scaffold(
       appBar: AppBar(
+        leading: const FallbackBackButton(fallback: '/orders'),
         title: const Text('Order tracking'),
         actions: [
           IconButton(
